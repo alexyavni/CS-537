@@ -1,0 +1,4 @@
+This line should be printed out (birthday)
+My bday was yesterday
+BIRTHDAY
+hey hey hey this is my birthday: jan 27

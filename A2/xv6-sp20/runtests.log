@@ -1,0 +1,408 @@
+starting build
+
+**********************************************************************
+
+Test build
+build xv6 using make
+
+**********************************************************************
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG kernel/proc.c -MF kernel/proc.d -MT kernel/proc.d -MT kernel/proc.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o kernel/proc.o kernel/proc.c
+ld  -m    elf_i386 -nostdlib --omagic \
+	--section-start=.text=0x100000 --entry=main --output=kernel/kernel \
+	kernel/multiboot.o kernel/data.o kernel/bio.o kernel/console.o kernel/exec.o kernel/file.o kernel/fs.o kernel/ide.o kernel/ioapic.o kernel/kalloc.o kernel/kbd.o kernel/lapic.o kernel/main.o kernel/mp.o kernel/picirq.o kernel/pipe.o kernel/proc.o kernel/spinlock.o kernel/string.o kernel/swtch.o kernel/syscall.o kernel/sysfile.o kernel/sysproc.o kernel/timer.o kernel/trapasm.o kernel/trap.o kernel/uart.o kernel/vectors.o kernel/vm.o \
+	-b binary initcode bootother
+dd if=/dev/zero of=xv6.img count=10000
+10000+0 records in
+10000+0 records out
+5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.0247329 s, 207 MB/s
+dd if=kernel/bootblock of=xv6.img conv=notrunc
+1+0 records in
+1+0 records out
+512 bytes copied, 8.0865e-05 s, 6.3 MB/s
+dd if=kernel/kernel of=xv6.img seek=1 conv=notrunc
+256+1 records in
+256+1 records out
+131100 bytes (131 kB, 128 KiB) copied, 0.000498466 s, 263 MB/s
+
+
+test build PASSED
+ (build xv6 using make)
+
+starting test1
+
+**********************************************************************
+
+Test test1
+call getfilenum() test test, value > 0
+
+**********************************************************************
+Running xv6 user progam /afs/cs.wisc.edu/p/course/cs537-shivaram/tests/p1b/ctests/test1.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+grep
+cat
+stressfs
+forktest
+sh
+README
+zombie
+ln
+wc
+echo
+tester
+ls
+usertests
+init
+kill
+rm
+mkdir
+balloc: first 407 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/p/course/cs537-remzi/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test test1 PASSED (1 of 1)
+ (call getfilenum() test test, value > 0)
+
+starting test2
+
+**********************************************************************
+
+Test test2
+call getfilenum() twice, sleep(50) between
+
+**********************************************************************
+Running xv6 user progam /afs/cs.wisc.edu/p/course/cs537-shivaram/tests/p1b/ctests/test2.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+grep
+cat
+stressfs
+forktest
+sh
+README
+zombie
+ln
+wc
+echo
+tester
+ls
+usertests
+init
+kill
+rm
+mkdir
+balloc: first 407 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/p/course/cs537-remzi/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test test2 PASSED (1 of 1)
+ (call getfilenum() twice, sleep(50) between)
+
+starting test3
+
+**********************************************************************
+
+Test test3
+called getfilenum() with 5 opens in between
+
+**********************************************************************
+Running xv6 user progam /afs/cs.wisc.edu/p/course/cs537-shivaram/tests/p1b/ctests/test3.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+grep
+cat
+stressfs
+forktest
+sh
+README
+zombie
+ln
+wc
+echo
+tester
+ls
+usertests
+init
+kill
+rm
+mkdir
+balloc: first 409 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/p/course/cs537-remzi/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test test3 PASSED (1 of 1)
+ (called getfilenum() with 5 opens in between)
+
+starting test4
+
+**********************************************************************
+
+Test test4
+called getfilenum() with max (13) opens in between
+
+**********************************************************************
+Running xv6 user progam /afs/cs.wisc.edu/p/course/cs537-shivaram/tests/p1b/ctests/test4.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+grep
+cat
+stressfs
+forktest
+sh
+README
+zombie
+ln
+wc
+echo
+tester
+ls
+usertests
+init
+kill
+rm
+mkdir
+balloc: first 409 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/p/course/cs537-remzi/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+$ 
+
+test test4 PASSED (1 of 1)
+ (called getfilenum() with max (13) opens in between)
+
+starting test5
+
+**********************************************************************
+
+Test test5
+called getfilenum() with opens and closes
+
+**********************************************************************
+Running xv6 user progam /afs/cs.wisc.edu/p/course/cs537-shivaram/tests/p1b/ctests/test5.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+grep
+cat
+stressfs
+forktest
+sh
+README
+zombie
+ln
+wc
+echo
+tester
+ls
+usertests
+init
+kill
+rm
+mkdir
+balloc: first 409 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/p/course/cs537-remzi/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+$ 
+
+test test5 PASSED (1 of 1)
+ (called getfilenum() with opens and closes)
+
+starting test6
+
+**********************************************************************
+
+Test test6
+called getfilenum() for a forked process
+
+**********************************************************************
+Running xv6 user progam /afs/cs.wisc.edu/p/course/cs537-shivaram/tests/p1b/ctests/test6.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+grep
+cat
+stressfs
+forktest
+sh
+README
+zombie
+ln
+wc
+echo
+tester
+ls
+usertests
+init
+kill
+rm
+mkdir
+balloc: first 409 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/p/course/cs537-remzi/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test test6 PASSED (1 of 1)
+ (called getfilenum() for a forked process)
+
+**********************************************************************
+Summary:
+test build PASSED
+ (build xv6 using make)
+
+test test1 PASSED (1 of 1)
+ (call getfilenum() test test, value > 0)
+
+test test2 PASSED (1 of 1)
+ (call getfilenum() twice, sleep(50) between)
+
+test test3 PASSED (1 of 1)
+ (called getfilenum() with 5 opens in between)
+
+test test4 PASSED (1 of 1)
+ (called getfilenum() with max (13) opens in between)
+
+test test5 PASSED (1 of 1)
+ (called getfilenum() with opens and closes)
+
+test test6 PASSED (1 of 1)
+ (called getfilenum() for a forked process)
+
+Passed 7 of 7 tests.
+Overall 7 of 7
+Points 6 of 6

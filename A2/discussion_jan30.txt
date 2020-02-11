@@ -1,0 +1,56 @@
+DISCUSSION JAN 30
+
+cp -r ~cs537-1/xv6-sp20
+cd xv6-sp20
+
+- Skill of reading other people's source code is important
+
+How do you compile the code?
+make file - type "make"
+Running our OS on top of another OS
+qemu: A tool that emulates real hardware
+
+xv6-sp20 make qemu-nox
+nox = no graphical user interface. We just want a simple shell.
+Shell should look different.
+
+Sequence of commands to get out of the shell - check the spec.
+Control key + a, followed by x
+
+		--------
+	      /    	 \
+	     |		  |
+	     | 	O      O  |
+	      \    ||    /
+               |()()()()|
+	       |________|
+	 
+	(`\__________________/`)
+	(./``````````````````\.)
+
+You don't need to understand the make file entirely
+
+To create a user mode program
+	- Create a file in user/helloworld.c
+	- Update user/makefile.mk to include your binary name
+	- Look at user/user.h to figure out what functions you can use
+	- Read the source code
+
+How does a system call work?
+	- user/usys.S has a list of system calls
+	- include/syscall.h has a list of system call numbers
+
+We jump into kernel mode
+	- trap.c initializes the traphandler for system calls
+	- vectors just calls jmp alltraps
+	- alltraps is in trapasm.S
+	- alltraps sets up a trap frame (defined in include/x86.h) jumps to trap
+
+
+mainc(void)
+{
+	.
+	.
+	.
+	tvinit();	// trap vectors
+}
