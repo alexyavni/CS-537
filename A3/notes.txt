@@ -1,0 +1,14 @@
+# What happens when we run ls
+
+1. Find out where is the binary that I need to launch to run ls?
+   The binary in /bin/ls
+   PATH or search path
+
+2. Now we need to RUN it!
+   Create a new process that will run ls
+
+3. We want the new process to run ls
+   Use execv
+
+How do I handle or figure out the options to execv
+Parse the line that you read and tokenize
