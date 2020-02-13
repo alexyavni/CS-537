@@ -13,6 +13,8 @@ int numArgs(char *line, char** args_list);
 int checkExit(char *func, int num_args); 
 int path_action(char **args_list, int num_args, struct Node **path_list);
 int add_node(char*path, struct Node **path_list);
+int remove_node(char *path, struct Node **path_list);
+int clear_LL(struct Node **path_list);
 int print_LL(struct Node **path_list);
 void err();
 
@@ -29,15 +31,15 @@ int main(int argc, char *argv[]) {
    size_t n = 0;
 
    /* Path list and the default path */
-   struct Node* head;
-   struct Node* default_path;
-   
-   head = (struct Node*)malloc(sizeof(struct Node));
-   default_path = (struct Node*)malloc(sizeof(struct Node));
+   struct Node* head = (struct Node*)malloc(sizeof(struct Node));
+   struct Node* default_path = (struct Node*)malloc(sizeof(struct Node));
 
    head -> data = "HEAD";
    head -> next = default_path;
-   default_path -> data = "/bin";
+
+   char * def_path = (char*) malloc(strlen("/bin"));
+   strcpy(def_path, "/bin");
+   default_path -> data = def_path;
    default_path -> next = NULL;
    struct Node **list = &head;
 
@@ -54,8 +56,8 @@ int main(int argc, char *argv[]) {
 
 		int num_args = numArgs(input, args_list);
 
-		printf("Num ARGS = %d\n", num_args);
-		printf("Function = %s\n", functionName);
+		// printf("Num ARGS = %d\n", num_args);
+		// printf("Function = %s\n", functionName);
 		
 		/* Does the user want to exit? */
 		if(checkExit(functionName, num_args))
@@ -63,16 +65,7 @@ int main(int argc, char *argv[]) {
 		
 		if(strcmp(functionName, "path") == 0)
 		{
-			if(num_args < 2) 
-			{
-				printf("LESS THAN 2 ARGS");
-				err();
-			}
-			else 
-			{
-				printf("calling path action!!!");
-				path_action(args_list, num_args, list);
-			}
+			path_action(args_list, num_args, list);
 		}
 		printf("smash> ");
 	}
@@ -88,16 +81,12 @@ int main(int argc, char *argv[]) {
  */
 int numArgs(char *line, char** args_list)
 {
-	// printf("NUM ARGZZZZ\n");
-	
 	int args = 0;
 	int pos = 0;
 	while(line != NULL)
         {
-		printf("LINE: %s*\n", line);
 		if(strcmp(line, " ") != 0)
 		{
-			// strlen
 			args_list[args] = malloc(strlen(line));
 			args_list[args] = line;
 			args ++;
@@ -129,32 +118,52 @@ int checkExit(char *func, int num_args)
 
 int path_action(char **args_list, int num_args, struct Node **path_list)
 {
-	printf("*********************** inside path_action\n");
-	printf("NUM ARGS = %d\n", num_args);
-
+	// printf("*********************** inside path_action\n");
+	// printf("NUM ARGS = %d\n", num_args);
+	if(num_args < 2) 
+	{
+		err();
+		return 1;
+	}
 	// case clear
 	if(num_args == 2 && strcmp(args_list[1], "clear") == 0)
-		printf("*CLEAR*\n");
+	{
+		clear_LL(path_list);
+		// printf("*CLEAR*\n");
+		print_LL(path_list);
+		// printf("\n");
+		return 0;
+	}
+
+	char* curr_path;
+	if(num_args == 3)
+	{
+		curr_path = (char*) malloc(strlen(args_list[2]));
+		strcpy(curr_path, args_list[2]);
+	}
+	else err();
 
 	// case add
 	if(strcmp(args_list[1], "add") == 0 && num_args == 3)
 	{
-		printf("*ADD*\n");
-		add_node("TRIAL", path_list);
+		// printf("*ADD*\n");
+		add_node(curr_path, path_list);
 	}
 
 	// case remove
 	if(strcmp(args_list[1], "remove") == 0 && num_args == 3)
-		printf("*REMOVE*\n");
+	{
+		// printf("*REMOVE*\n");
+		remove_node(curr_path, path_list);
+	}
 
 	print_LL(path_list);
-	printf("\n");
+	// printf("\n");
 	return 0;	
 }
 
-int add_node(char*path, struct Node **path_list) 
+int add_node(char *path, struct Node **path_list) 
 {
-
 	struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
 	new_node -> data = path;
 
@@ -167,6 +176,41 @@ int add_node(char*path, struct Node **path_list)
 
 }
 
+int remove_node(char *path, struct Node **path_list) 
+{
+	struct Node *curr = *path_list;
+	struct Node *prev;
+	int found = 0;
+	while( curr->next != NULL)
+	{	
+		prev = curr;
+		curr = curr -> next;
+		// printf("str diff: %d\n", strcmp(curr->data, path));
+		if(strcmp(curr->data, path) == 0)
+		{
+			prev -> next = curr -> next;
+			free(curr->data);
+			curr = prev;
+			found = 1;
+		}
+	}
+	if(!found)
+		err();
+	return 1;
+}
+
+int clear_LL(struct Node **path_list)
+{
+	struct Node *curr = *path_list;
+	struct Node *head = *path_list;
+	while( curr->next != NULL)
+	{
+		curr = curr -> next;
+		free(curr -> data);
+	}
+	head -> next = NULL;
+}
+
 int print_LL(struct Node **path_list)
 {
 	
@@ -177,6 +221,7 @@ int print_LL(struct Node **path_list)
 		curr = curr->next;
 		printf("%s -> ", curr->data);	
 	}
+	printf("\n");
 
 	return 0;
 }
