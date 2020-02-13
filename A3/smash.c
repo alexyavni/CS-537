@@ -14,7 +14,7 @@ int checkExit(char *func, int num_args);
 int path_action(char **args_list, int num_args, struct Node **path_list);
 int add_node(char*path, struct Node **path_list);
 int remove_node(char *path, struct Node **path_list);
-int clear_LL(struct Node **path_list);
+int clear_path_list(struct Node **path_list);
 int print_LL(struct Node **path_list);
 void err();
 
@@ -67,6 +67,19 @@ int main(int argc, char *argv[]) {
 		{
 			path_action(args_list, num_args, list);
 		}
+
+		if(strcmp(functionName, "cd") == 0)
+		{
+			char s[100]; 
+			printf("Curr dir: %s\n", getcwd(s, 100));
+			if(num_args != 2) err();
+			else 
+			{ 
+				int cd_error = chdir(args_list[1]);
+				if(cd_error != 0) err();
+				printf("Curr dir: %s\n", getcwd(s, 100));
+			}
+		}
 		printf("smash> ");
 	}
    }
@@ -116,6 +129,9 @@ int checkExit(char *func, int num_args)
 
 }
 
+/*
+* Execute path action (add, remove, clear)
+*/
 int path_action(char **args_list, int num_args, struct Node **path_list)
 {
 	// printf("*********************** inside path_action\n");
@@ -128,7 +144,7 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 	// case clear
 	if(num_args == 2 && strcmp(args_list[1], "clear") == 0)
 	{
-		clear_LL(path_list);
+		clear_path_list(path_list);
 		// printf("*CLEAR*\n");
 		print_LL(path_list);
 		// printf("\n");
@@ -162,6 +178,9 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 	return 0;	
 }
 
+/*
+* Add a new path to the path list
+*/
 int add_node(char *path, struct Node **path_list) 
 {
 	struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
@@ -176,6 +195,9 @@ int add_node(char *path, struct Node **path_list)
 
 }
 
+/*
+* Remove a path from the list (and all duplicates)
+*/
 int remove_node(char *path, struct Node **path_list) 
 {
 	struct Node *curr = *path_list;
@@ -199,7 +221,10 @@ int remove_node(char *path, struct Node **path_list)
 	return 1;
 }
 
-int clear_LL(struct Node **path_list)
+/*
+* Clear the path list - should be empty
+*/
+int clear_path_list(struct Node **path_list)
 {
 	struct Node *curr = *path_list;
 	struct Node *head = *path_list;
@@ -211,6 +236,10 @@ int clear_LL(struct Node **path_list)
 	head -> next = NULL;
 }
 
+/*
+* Helper function
+* Print the linked list
+*/
 int print_LL(struct Node **path_list)
 {
 	
@@ -226,6 +255,10 @@ int print_LL(struct Node **path_list)
 	return 0;
 }
 
+/*
+* Helper function
+* Prints the same error message
+*/
 void err()
 {
 	write(STDERR_FILENO, ERR_MSG, strlen(ERR_MSG));
