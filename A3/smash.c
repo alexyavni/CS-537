@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 /* Linked List structure */
 typedef struct Node {
@@ -11,6 +13,7 @@ typedef struct Node {
 
 int numArgs(char *line, char** args_list);
 int checkExit(char *func, int num_args); 
+char* checkAccess(char *func, struct Node **path_list, char* result); 
 int path_action(char **args_list, int num_args, struct Node **path_list);
 int add_node(char*path, struct Node **path_list);
 int remove_node(char *path, struct Node **path_list);
@@ -61,26 +64,52 @@ int main(int argc, char *argv[]) {
 		
 		/* Does the user want to exit? */
 		if(checkExit(functionName, num_args))
+		{
+			printf("\n");
 			exit(0);
-		
-		if(strcmp(functionName, "path") == 0)
+		}
+		else if(strcmp(functionName, "path") == 0)
 		{
 			path_action(args_list, num_args, list);
 		}
-
-		if(strcmp(functionName, "cd") == 0)
+		else if(strcmp(functionName, "cd") == 0)
 		{
 			char s[100]; 
-			printf("Curr dir: %s\n", getcwd(s, 100));
+			//printf("Curr dir: %s\n", getcwd(s, 100));
 			if(num_args != 2) err();
 			else 
 			{ 
 				int cd_error = chdir(args_list[1]);
 				if(cd_error != 0) err();
-				printf("Curr dir: %s\n", getcwd(s, 100));
+				//printf("Curr dir: %s\n", getcwd(s, 100));
 			}
 		}
+		else {
+			int status = 0;
+			char* action = (char*) malloc (strlen(functionName));
+			char* result;
+			strcpy(action, functionName);
+			printf("something else\n");
+			result = checkAccess(action, list, result);
+			if(result != NULL)
+			{
+				char * my_args[] = {result, NULL};
+				printf("Starting%d\n", getpid());
+				int rc = fork();
+				if(rc == 0) {
+					printf("Exiting from child and PID is %d and RC is%d\n", getpid(), rc);
+					int exec_rc = execv(my_args[0], my_args);
+					printf("Done with exec!!!\n");
+				} else {
+					int wait_rc = waitpid(rc, NULL, 1);
+					printf("Exiting parent process and my PID is %d and RC is %d\n", getpid(), rc);
+				}
+			}
+			else err();
+		}
+		
 		printf("smash> ");
+		fflush(stdin);
 	}
    }
 
@@ -129,6 +158,31 @@ int checkExit(char *func, int num_args)
 
 }
 
+char* checkAccess(char *func, struct Node **path_list, char* result)
+{
+	printf("in check access!!");
+	struct Node *curr = *path_list;
+	char * dest;
+	char * slash;
+	strcpy(slash, "/");
+	while(curr->next != NULL)
+	{
+		curr = curr->next;
+		dest = (char*) malloc(strlen(curr->data) + 1 + strlen(func));
+		strcpy(dest, curr -> data);
+		strcat(dest, slash);
+		strcat(dest, func);
+		printf("Trying path: %s\n", dest);
+		if(access(dest, X_OK) == 0)
+		{
+			printf("SUCCESS\n");
+			//result = (char*) malloc(strlen(dest));
+			return dest;
+		}
+	}
+	return NULL;
+}
+
 /*
 * Execute path action (add, remove, clear)
 */
@@ -173,7 +227,7 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 		remove_node(curr_path, path_list);
 	}
 
-	print_LL(path_list);
+	//print_LL(path_list);
 	// printf("\n");
 	return 0;	
 }
@@ -242,7 +296,6 @@ int clear_path_list(struct Node **path_list)
 */
 int print_LL(struct Node **path_list)
 {
-	
 	struct Node *curr = *path_list;
 	printf("%s -> ", curr->data);
 	while(curr->next != NULL)
