@@ -28,7 +28,8 @@ static char ERR_MSG[30] = "An error has occurred\n";
 
 int main(int argc, char *argv[]) {
    /* Print first prompt */
-   printf("smash> ");
+   // printf("smash> ");
+   //flush(stdin);
 
    /* Variables for reading lines */
    char *buffer = NULL;
@@ -49,6 +50,8 @@ int main(int argc, char *argv[]) {
 
    while(1) 
    {
+	printf("smash> ");
+	fflush(stdout);
 	if(getline(&buffer, &n, stdin) != -1)
 	{
 		/* Parse the user input  */
@@ -56,7 +59,7 @@ int main(int argc, char *argv[]) {
 
 		/* First arg is the function name */
 		char *functionName = input;
-		char** args_list = malloc(1000);
+		char** args_list = malloc(10000);
 
 		int num_args = numArgs(input, args_list);
 		
@@ -98,7 +101,6 @@ int main(int argc, char *argv[]) {
 				int cd_error = chdir(args_list[1]);
 				if(cd_error != 0) err();
 			}
-			wait(NULL);
 		}
 		// Not a built in function - must check path list
 		else {
@@ -138,7 +140,7 @@ int main(int argc, char *argv[]) {
 			else err();
 		}
 		
-		printf("smash> ");
+		// printf("smash> ");
 		// fflush(stdin);
 	}
    }
@@ -253,7 +255,7 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 	if(num_args == 2 && strcmp(args_list[1], "clear") == 0)
 	{
 		clear_path_list(path_list);
-		print_LL(path_list);
+		//print_LL(path_list);
 		return 0;
 	}
 
@@ -362,4 +364,5 @@ int print_LL(struct Node **path_list)
 void err()
 {
 	write(STDERR_FILENO, ERR_MSG, strlen(ERR_MSG));
+	fflush(stderr);
 }
