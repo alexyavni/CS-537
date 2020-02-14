@@ -12,8 +12,9 @@ typedef struct Node {
 } Node;
 
 int numArgs(char *line, char** args_list);
-int checkExit(char *func, int num_args); 
-char* checkAccess(char *func, struct Node **path_list, char* result); 
+int checkExit(char *func, int num_args);
+int checkRedirect(char **args_list, int num_args);
+char* checkAccess(char *func, struct Node **path_list, char* result);
 int path_action(char **args_list, int num_args, struct Node **path_list);
 int add_node(char*path, struct Node **path_list);
 int remove_node(char *path, struct Node **path_list);
@@ -58,19 +59,35 @@ int main(int argc, char *argv[]) {
 		char** args_list = malloc(1000);
 
 		int num_args = numArgs(input, args_list);
-
-		// printf("Num ARGS = %d\n", num_args);
-		// printf("Function = %s\n", functionName);
 		
+		
+		// int redirect = checkRedirect(args_list, num_args);
+		// printf("REDIRECT")
+		/*if(redirect == -1)
+		{
+			printf("error occured in redirect\n");
+		}
+		else if(redirect == 0)
+		{
+			printf("no redirect\n");
+		}
+		else
+		{
+			printf("REDIRECTION\n");
+			printf("Output file: %s\n", args_list[num_args-1]);
+		}
+
+*/
+
 		/* Does the user want to exit? */
 		if(checkExit(functionName, num_args))
 		{
-			printf("\n");
 			exit(0);
 		}
 		else if(strcmp(functionName, "path") == 0)
 		{
 			path_action(args_list, num_args, list);
+			wait(NULL);
 		}
 		else if(strcmp(functionName, "cd") == 0)
 		{
@@ -81,6 +98,7 @@ int main(int argc, char *argv[]) {
 				int cd_error = chdir(args_list[1]);
 				if(cd_error != 0) err();
 			}
+			wait(NULL);
 		}
 		// Not a built in function - must check path list
 		else {
@@ -91,7 +109,6 @@ int main(int argc, char *argv[]) {
 
 			strcpy(action, functionName);
 			result = checkAccess(action, list, result);
-			// printf("RESULT: %s\n", result);
 			if(result != NULL)
 			{
 				int diff = strcmp(result, "/bin/ls");
@@ -110,31 +127,47 @@ int main(int argc, char *argv[]) {
 				int rc = fork();
 				if(rc == 0) {
 					int exec_rc = execv(my_args[0], my_args);
-					// printf("Exiting from child and PID is %d and RC is%d\n", getpid(), rc);
 					if(exec_rc == -1) err();
 				} else {
 					int wait_rc = waitpid(rc, NULL, 1);
 					while ((wpid = wait(&status)) > 0);
-					//printf("Exiting parent process and my PID is %d and RC is %d\n", getpid(), rc);
 				}
 
-				// Free mem
-				// for(j = 0; j < num_args + 1 ; j++)
-				// {
-				// 		free(my_args[j]);
-				// 		printf("j = %d\n", j);
-				// }
-				// free(my_args);
+				// TODO: free mem
 			}
 			else err();
 		}
 		
 		printf("smash> ");
-		fflush(stdin);
+		// fflush(stdin);
 	}
    }
 
    return 0;
+}
+
+
+int checkRedirect(char **args_list, int num_args) 
+{
+	int redirect_count = 0;
+	int i = 0;
+	int redirect_pos = 0;
+	for(i = 0; i < num_args; i++)
+	{
+		if(strcmp(args_list[i], ">") == 0)
+		{
+			redirect_count++;
+			redirect_pos = i;
+		}
+	}
+
+	if(redirect_count > 1 || ((redirect_pos != num_args - 2) && (redirect_count == 1)))
+		return -1;
+	
+	if(redirect_count == 1 && redirect_pos == num_args - 2)
+		return 1;
+
+	return 0;
 }
 
 /* Helper function to return the 
@@ -172,16 +205,18 @@ int checkExit(char *func, int num_args)
 		}
 		else
 		{
-			err();
+			return 0;
 		}
 	}
 	return 0;
 
 }
 
+/*
+ * Checking the validity of a path using access()
+ */
 char* checkAccess(char *func, struct Node **path_list, char* result)
 {
-	printf("in check access!!");
 	struct Node *curr = *path_list;
 	char * dest;
 	char * slash;
@@ -193,11 +228,11 @@ char* checkAccess(char *func, struct Node **path_list, char* result)
 		strcpy(dest, curr -> data);
 		strcat(dest, slash);
 		strcat(dest, func);
-		printf("Trying path: %s\n", dest);
+		// printf("Trying path: %s\n", dest);
 		if(access(dest, X_OK) == 0)
 		{
-			printf("SUCCESS\n");
-			//result = (char*) malloc(strlen(dest));
+			// printf("SUCCESS\n");
+			// result = (char*) malloc(strlen(dest));
 			return dest;
 		}
 	}
@@ -209,8 +244,6 @@ char* checkAccess(char *func, struct Node **path_list, char* result)
 */
 int path_action(char **args_list, int num_args, struct Node **path_list)
 {
-	// printf("*********************** inside path_action\n");
-	// printf("NUM ARGS = %d\n", num_args);
 	if(num_args < 2) 
 	{
 		err();
@@ -220,9 +253,7 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 	if(num_args == 2 && strcmp(args_list[1], "clear") == 0)
 	{
 		clear_path_list(path_list);
-		// printf("*CLEAR*\n");
 		print_LL(path_list);
-		// printf("\n");
 		return 0;
 	}
 
@@ -237,19 +268,15 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 	// case add
 	if(strcmp(args_list[1], "add") == 0 && num_args == 3)
 	{
-		// printf("*ADD*\n");
 		add_node(curr_path, path_list);
 	}
 
 	// case remove
 	if(strcmp(args_list[1], "remove") == 0 && num_args == 3)
 	{
-		// printf("*REMOVE*\n");
 		remove_node(curr_path, path_list);
 	}
 
-	//print_LL(path_list);
-	// printf("\n");
 	return 0;	
 }
 
@@ -282,7 +309,6 @@ int remove_node(char *path, struct Node **path_list)
 	{	
 		prev = curr;
 		curr = curr -> next;
-		// printf("str diff: %d\n", strcmp(curr->data, path));
 		if(strcmp(curr->data, path) == 0)
 		{
 			prev -> next = curr -> next;
