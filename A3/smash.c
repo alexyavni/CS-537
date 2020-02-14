@@ -75,35 +75,56 @@ int main(int argc, char *argv[]) {
 		else if(strcmp(functionName, "cd") == 0)
 		{
 			char s[100]; 
-			//printf("Curr dir: %s\n", getcwd(s, 100));
 			if(num_args != 2) err();
 			else 
 			{ 
 				int cd_error = chdir(args_list[1]);
 				if(cd_error != 0) err();
-				//printf("Curr dir: %s\n", getcwd(s, 100));
 			}
 		}
+		// Not a built in function - must check path list
 		else {
 			int status = 0;
 			char* action = (char*) malloc (strlen(functionName));
 			char* result;
+			pid_t wpid;
+
 			strcpy(action, functionName);
-			printf("something else\n");
 			result = checkAccess(action, list, result);
+			// printf("RESULT: %s\n", result);
 			if(result != NULL)
 			{
-				char * my_args[] = {result, NULL};
-				printf("Starting%d\n", getpid());
+				int diff = strcmp(result, "/bin/ls");
+				char ** my_args = malloc(sizeof(char*) * (num_args + 1));
+				my_args[0] = (char*) malloc(strlen(result));
+				my_args[0] = result;
+
+				int j;
+				for(j = 1; j < num_args; j++)
+				{
+						my_args[j] = (char*) malloc(strlen(args_list[j]));
+						my_args[j] = args_list[j];
+				}
+				my_args[num_args + 1] = NULL;
+
 				int rc = fork();
 				if(rc == 0) {
-					printf("Exiting from child and PID is %d and RC is%d\n", getpid(), rc);
 					int exec_rc = execv(my_args[0], my_args);
-					printf("Done with exec!!!\n");
+					// printf("Exiting from child and PID is %d and RC is%d\n", getpid(), rc);
+					if(exec_rc == -1) err();
 				} else {
 					int wait_rc = waitpid(rc, NULL, 1);
-					printf("Exiting parent process and my PID is %d and RC is %d\n", getpid(), rc);
+					while ((wpid = wait(&status)) > 0);
+					//printf("Exiting parent process and my PID is %d and RC is %d\n", getpid(), rc);
 				}
+
+				// Free mem
+				// for(j = 0; j < num_args + 1 ; j++)
+				// {
+				// 		free(my_args[j]);
+				// 		printf("j = %d\n", j);
+				// }
+				// free(my_args);
 			}
 			else err();
 		}
