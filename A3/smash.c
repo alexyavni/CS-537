@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 /* Linked List structure */
 typedef struct Node {
@@ -27,9 +29,6 @@ static char *SPACES = "  \t\r\n\v\f";
 static char ERR_MSG[30] = "An error has occurred\n";
 
 int main(int argc, char *argv[]) {
-   /* Print first prompt */
-   // printf("smash> ");
-   //flush(stdin);
 
    /* Variables for reading lines */
    char *buffer = NULL;
@@ -47,11 +46,14 @@ int main(int argc, char *argv[]) {
    default_path -> data = def_path;
    default_path -> next = NULL;
    struct Node **list = &head;
+   //freopen("output.txt", "w+", stdout);
 
    while(1) 
    {
+	// freopen("output.txt", "a+", stdout);
+    // freopen("output.txt", "a", stderr);
 	printf("smash> ");
-	fflush(stdout);
+	// fflush(stdout);
 	if(getline(&buffer, &n, stdin) != -1)
 	{
 		/* Parse the user input  */
@@ -63,24 +65,29 @@ int main(int argc, char *argv[]) {
 
 		int num_args = numArgs(input, args_list);
 		
-		
-		// int redirect = checkRedirect(args_list, num_args);
-		// printf("REDIRECT")
-		/*if(redirect == -1)
+
+		//freopen("output.txt", "w+", stdout);
+		char* output_file;
+		int redirect = checkRedirect(args_list, num_args);
+		//printf("REDIRECT: %d\n", redirect);
+		if(redirect == -1)
 		{
-			printf("error occured in redirect\n");
+			//printf("error occured in redirect\n");
 		}
 		else if(redirect == 0)
 		{
-			printf("no redirect\n");
+			//printf("no redirect\n");
 		}
 		else
 		{
-			printf("REDIRECTION\n");
-			printf("Output file: %s\n", args_list[num_args-1]);
+			output_file = malloc(strlen(args_list[num_args-1]));
+			output_file = args_list[num_args-1];
+			// fclose(fopen(output_file, "w"));
+			// freopen(output_file, "a+", stdout);
+    		// freopen(output_file, "a+", stderr);
+			num_args = num_args - 2;
 		}
-
-*/
+		
 
 		/* Does the user want to exit? */
 		if(checkExit(functionName, num_args))
@@ -104,15 +111,18 @@ int main(int argc, char *argv[]) {
 		}
 		// Not a built in function - must check path list
 		else {
+			//printf("REDIRECT2: %d\n", redirect);
 			int status = 0;
 			char* action = (char*) malloc (strlen(functionName));
 			char* result;
 			pid_t wpid;
 
 			strcpy(action, functionName);
+			//printf("REDIRECT2.5 before access: %d\n", redirect);
 			result = checkAccess(action, list, result);
 			if(result != NULL)
 			{
+				//printf("REDIRECT3: %d\n", redirect);
 				int diff = strcmp(result, "/bin/ls");
 				char ** my_args = malloc(sizeof(char*) * (num_args + 1));
 				my_args[0] = (char*) malloc(strlen(result));
@@ -128,6 +138,12 @@ int main(int argc, char *argv[]) {
 
 				int rc = fork();
 				if(rc == 0) {
+					if(redirect)
+					{
+						int fp = open(output_file, O_TRUNC | O_CREAT | O_WRONLY);
+						dup2(fp, 1);
+						dup2(fp, 2);
+					}
 					int exec_rc = execv(my_args[0], my_args);
 					if(exec_rc == -1) err();
 				} else {
@@ -139,9 +155,6 @@ int main(int argc, char *argv[]) {
 			}
 			else err();
 		}
-		
-		// printf("smash> ");
-		// fflush(stdin);
 	}
    }
 
@@ -219,22 +232,26 @@ int checkExit(char *func, int num_args)
  */
 char* checkAccess(char *func, struct Node **path_list, char* result)
 {
+	//printf("func %s\n", func);
+	//print_LL(path_list);
 	struct Node *curr = *path_list;
 	char * dest;
-	char * slash;
+	char * slash = malloc(sizeof(char));
+	//printf("before strcpy\n");
 	strcpy(slash, "/");
+	//printf("before while\n");
 	while(curr->next != NULL)
 	{
 		curr = curr->next;
+		//printf("dest init \n");
 		dest = (char*) malloc(strlen(curr->data) + 1 + strlen(func));
 		strcpy(dest, curr -> data);
 		strcat(dest, slash);
 		strcat(dest, func);
-		// printf("Trying path: %s\n", dest);
+		//printf("dest = %s\n", dest);
 		if(access(dest, X_OK) == 0)
 		{
-			// printf("SUCCESS\n");
-			// result = (char*) malloc(strlen(dest));
+			//printf("Found path? %s\n", dest);
 			return dest;
 		}
 	}
