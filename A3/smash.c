@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 	// freopen("output.txt", "a+", stdout);
     // freopen("output.txt", "a", stderr);
 	printf("smash> ");
-	// fflush(stdout);
+	fflush(stdout);
 	if(getline(&buffer, &n, stdin) != -1)
 	{
 		/* Parse the user input  */
@@ -140,7 +140,8 @@ int main(int argc, char *argv[]) {
 				if(rc == 0) {
 					if(redirect)
 					{
-						int fp = open(output_file, O_TRUNC | O_CREAT | O_WRONLY);
+						FILE* f = fopen(output_file, "w");
+						int fp = fileno(f);
 						dup2(fp, 1);
 						dup2(fp, 2);
 					}
