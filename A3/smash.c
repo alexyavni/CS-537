@@ -119,13 +119,11 @@ int runParallel(char *buffer, struct Node **list)
 	}
 
 	int check_white_space = strspn(par_list[0], " \r\n\t");
-	if(check_white_space == strlen(par_list[0]));
+	if(check_white_space == strlen(par_list[0]))
+		return 1;
 
 	if (num_pars == 1)
 	{
-		// char *checkBlank = strtok(par_list[0], SPACES);
-		// if (checkBlank == NULL)
-		// return -1;
 		parseLine(par_list[0], list);
 		return 0;
 	}
@@ -205,7 +203,7 @@ int parseLine(char *buffer, struct Node **list)
 	{
 		int status = 0;
 		char *action = (char *)malloc(strlen(functionName));
-		char *result;
+		char *result = NULL;
 		pid_t wpid;
 
 		strcpy(action, functionName);
