@@ -14,6 +14,7 @@ typedef struct Node
 	struct Node *next;
 } Node;
 
+int runParallel(char *buffer, struct Node **list);
 int parseLine(char *buffer, struct Node **list);
 int numArgs(char *line, char **args_list);
 int checkExit(char *func, int num_args);
@@ -57,18 +58,6 @@ int main(int argc, char *argv[])
 		if (getline(&buffer, &n, stdin) != -1)
 		{
 			char *line = strtok(buffer, ";");
-			// char *cpy = malloc(strlen(line));
-			// strcpy(cpy, line);
-			// while (line != NULL)
-			// {
-			// 	printf("** %s\n", line);
-			// 	parseLine(cpy, list);
-			// 	//printf("line = %s\n", line);
-			// 	line = strtok(NULL, ";");
-			// 	printf("line = %s\n", line);
-			// }
-
-
 			int num_cmds = 0;
 			char **cmd_list = malloc(10000);
 			while (line != NULL)
@@ -78,17 +67,63 @@ int main(int argc, char *argv[])
 					cmd_list[num_cmds] = malloc(strlen(line));
 					cmd_list[num_cmds] = line;
 					num_cmds++;
-					//printf("line*** %s\n", line);
 				}
 				line = strtok(NULL, ";");
 			}
 
 			int i = 0;
-			for(i = 0; i < num_cmds; i++)
+			for (i = 0; i < num_cmds; i++)
 			{
-				parseLine(cmd_list[i], list);
+				runParallel(cmd_list[i], list);
 			}
 		}
+	}
+
+	return 0;
+}
+
+/*
+* Check for parallel commands and run concurrently
+*/
+int runParallel(char *buffer, struct Node **list)
+{
+	char *line = strtok(buffer, "&");
+	int num_pars = 0;
+	char **par_list = malloc(10000);
+	while (line != NULL)
+	{
+		if (strcmp(line, " ") != 0)
+		{
+			par_list[num_pars] = malloc(strlen(line));
+			par_list[num_pars] = line;
+			num_pars++;
+		}
+		line = strtok(NULL, "&");
+	}
+
+	if(num_pars == 1)
+	{
+		parseLine(par_list[0], list);
+		return 0;
+	}
+
+	int status = 0;
+	pid_t wpid;
+	int i = 0;
+	for (i = 0; i < num_pars; i++)
+	{
+			int rc = fork();
+			if (rc == 0)
+			{
+				parseLine(par_list[i], list);
+				exit(0);
+			}
+			else
+			{
+				int wait_rc = waitpid(rc, NULL, 1);
+				while ((wpid = wait(&status)) > 0)
+					;
+			}
 	}
 
 	return 0;
