@@ -46,12 +46,9 @@ int main(int argc, char *argv[]) {
    default_path -> data = def_path;
    default_path -> next = NULL;
    struct Node **list = &head;
-   //freopen("output.txt", "w+", stdout);
 
    while(1) 
    {
-	// freopen("output.txt", "a+", stdout);
-    // freopen("output.txt", "a", stderr);
 	printf("smash> ");
 	fflush(stdout);
 	if(getline(&buffer, &n, stdin) != -1)
@@ -65,26 +62,16 @@ int main(int argc, char *argv[]) {
 
 		int num_args = numArgs(input, args_list);
 		
-
-		//freopen("output.txt", "w+", stdout);
 		char* output_file;
 		int redirect = checkRedirect(args_list, num_args);
-		//printf("REDIRECT: %d\n", redirect);
 		if(redirect == -1)
 		{
-			//printf("error occured in redirect\n");
+			err();
 		}
-		else if(redirect == 0)
-		{
-			//printf("no redirect\n");
-		}
-		else
+		else if(redirect == 1)
 		{
 			output_file = malloc(strlen(args_list[num_args-1]));
 			output_file = args_list[num_args-1];
-			// fclose(fopen(output_file, "w"));
-			// freopen(output_file, "a+", stdout);
-    		// freopen(output_file, "a+", stderr);
 			num_args = num_args - 2;
 		}
 		
@@ -111,22 +98,19 @@ int main(int argc, char *argv[]) {
 		}
 		// Not a built in function - must check path list
 		else {
-			//printf("REDIRECT2: %d\n", redirect);
 			int status = 0;
 			char* action = (char*) malloc (strlen(functionName));
 			char* result;
 			pid_t wpid;
 
 			strcpy(action, functionName);
-			//printf("REDIRECT2.5 before access: %d\n", redirect);
 			result = checkAccess(action, list, result);
 			if(result != NULL)
 			{
-				//printf("REDIRECT3: %d\n", redirect);
 				int diff = strcmp(result, "/bin/ls");
 				char ** my_args = malloc(sizeof(char*) * (num_args + 1));
 				my_args[0] = (char*) malloc(strlen(result));
-				my_args[0] = result;
+				my_args[0] = functionName;
 
 				int j;
 				for(j = 1; j < num_args; j++)
@@ -144,14 +128,14 @@ int main(int argc, char *argv[]) {
 						int fp = fileno(f);
 						dup2(fp, 1);
 						dup2(fp, 2);
+						//printf("FORK\n");
 					}
-					int exec_rc = execv(my_args[0], my_args);
+					int exec_rc = execv(result, my_args);
 					if(exec_rc == -1) err();
 				} else {
 					int wait_rc = waitpid(rc, NULL, 1);
 					while ((wpid = wait(&status)) > 0);
 				}
-
 				// TODO: free mem
 			}
 			else err();
@@ -238,18 +222,14 @@ char* checkAccess(char *func, struct Node **path_list, char* result)
 	struct Node *curr = *path_list;
 	char * dest;
 	char * slash = malloc(sizeof(char));
-	//printf("before strcpy\n");
 	strcpy(slash, "/");
-	//printf("before while\n");
 	while(curr->next != NULL)
 	{
 		curr = curr->next;
-		//printf("dest init \n");
 		dest = (char*) malloc(strlen(curr->data) + 1 + strlen(func));
 		strcpy(dest, curr -> data);
 		strcat(dest, slash);
 		strcat(dest, func);
-		//printf("dest = %s\n", dest);
 		if(access(dest, X_OK) == 0)
 		{
 			//printf("Found path? %s\n", dest);
@@ -273,7 +253,6 @@ int path_action(char **args_list, int num_args, struct Node **path_list)
 	if(num_args == 2 && strcmp(args_list[1], "clear") == 0)
 	{
 		clear_path_list(path_list);
-		//print_LL(path_list);
 		return 0;
 	}
 
