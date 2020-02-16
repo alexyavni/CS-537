@@ -33,7 +33,6 @@ static char ERR_MSG[30] = "An error has occurred\n";
 
 int main(int argc, char *argv[])
 {
-
 	/* Variables for reading lines */
 	char *buffer = NULL;
 	size_t n = 0;
@@ -51,12 +50,30 @@ int main(int argc, char *argv[])
 	default_path->next = NULL;
 	struct Node **list = &head;
 
+	int batch_mode = 0;
+	if(argc > 1)
+	{
+		if(argc > 2)
+		{
+			err();
+			return 0;
+		}
+
+		batch_mode = 1;
+		FILE* input_file = fopen(argv[1], "r");
+		int fp = fileno(input_file);
+		dup2(fp, 0);
+	}
+
 	while (1)
 	{
-		printf("smash> ");
-		fflush(stdout);
+		if(!batch_mode) {
+			printf("smash> ");
+			fflush(stdout);
+		}
 		if (getline(&buffer, &n, stdin) != -1)
 		{
+
 			char *line = strtok(buffer, ";");
 			int num_cmds = 0;
 			char **cmd_list = malloc(10000);
@@ -101,8 +118,14 @@ int runParallel(char *buffer, struct Node **list)
 		line = strtok(NULL, "&");
 	}
 
-	if(num_pars == 1)
+	int check_white_space = strspn(par_list[0], " \r\n\t");
+	if(check_white_space == strlen(par_list[0]));
+
+	if (num_pars == 1)
 	{
+		// char *checkBlank = strtok(par_list[0], SPACES);
+		// if (checkBlank == NULL)
+		// return -1;
 		parseLine(par_list[0], list);
 		return 0;
 	}
@@ -112,18 +135,18 @@ int runParallel(char *buffer, struct Node **list)
 	int i = 0;
 	for (i = 0; i < num_pars; i++)
 	{
-			int rc = fork();
-			if (rc == 0)
-			{
-				parseLine(par_list[i], list);
-				exit(0);
-			}
-			else
-			{
-				int wait_rc = waitpid(rc, NULL, 1);
-				while ((wpid = wait(&status)) > 0)
-					;
-			}
+		int rc = fork();
+		if (rc == 0)
+		{
+			parseLine(par_list[i], list);
+			exit(0);
+		}
+		else
+		{
+			waitpid(rc, NULL, 1);
+			while ((wpid = wait(&status)) > 0)
+				;
+		}
 	}
 
 	return 0;
@@ -134,7 +157,6 @@ int runParallel(char *buffer, struct Node **list)
 */
 int parseLine(char *buffer, struct Node **list)
 {
-
 	/* Parse the user input  */
 	char *input = strtok(buffer, SPACES);
 
@@ -169,7 +191,6 @@ int parseLine(char *buffer, struct Node **list)
 	}
 	else if (strcmp(functionName, "cd") == 0)
 	{
-		char s[100];
 		if (num_args != 2)
 			err();
 		else
@@ -191,7 +212,6 @@ int parseLine(char *buffer, struct Node **list)
 		result = checkAccess(action, list, result);
 		if (result != NULL)
 		{
-			int diff = strcmp(result, "/bin/ls");
 			char **my_args = malloc(sizeof(char *) * (num_args + 1));
 			my_args[0] = (char *)malloc(strlen(result));
 			my_args[0] = functionName;
@@ -220,7 +240,7 @@ int parseLine(char *buffer, struct Node **list)
 			}
 			else
 			{
-				int wait_rc = waitpid(rc, NULL, 1);
+				waitpid(rc, NULL, 1);
 				while ((wpid = wait(&status)) > 0)
 					;
 			}
@@ -267,7 +287,6 @@ int checkRedirect(char **args_list, int num_args)
 int numArgs(char *line, char **args_list)
 {
 	int args = 0;
-	int pos = 0;
 	while (line != NULL)
 	{
 		if (strcmp(line, " ") != 0)
@@ -422,6 +441,7 @@ int clear_path_list(struct Node **path_list)
 		free(curr->data);
 	}
 	head->next = NULL;
+	return 0;
 }
 
 /*
