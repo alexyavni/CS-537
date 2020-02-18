@@ -1,0 +1,41 @@
+starting build
+
+**********************************************************************
+
+Test build
+compile smash.c
+
+**********************************************************************
+gcc smash.c -o smash
+gcc: error: smash.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+
+
+test build PASSED (5 of 5)
+ (compile smash.c)
+
+starting cd
+
+**********************************************************************
+
+Test cd
+cd with argument, and cd without argument
+
+**********************************************************************
+/tmp/tmplP9B58/p/./smash
+OSError: [Errno 2] No such file or directory
+
+
+test cd FAILED (0 of 10)
+ (cd with argument, and cd without argument)
+ Unexpected exception [Errno 2] No such file or directory
+
+ Test it yourself by running
+ smash </u/c/s/cs537-1/tests/p2a/cd/in
+ and check out the test folder
+ /u/c/s/cs537-1/tests/p2a/cd
+ to compare your output with reference outputs. 
+
+Skipped 11 tests.
+To keep testing after failing a test, use flag '-c' or '--continue'
