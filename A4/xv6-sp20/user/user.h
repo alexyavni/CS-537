@@ -40,5 +40,7 @@ void* malloc(uint);
 void free(void*);
 int atoi(const char*);
 
+enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+
 #endif // _USER_H_
 
