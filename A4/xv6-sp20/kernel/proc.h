@@ -74,6 +74,9 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int priority;                // Priority level (0-3): 3 is highest priority
+  int ticks[4];                // Number of ticks the process has accumulatesd at each priority level
+  int wait_ticks[4];           // Number of ticks this process has waited before being scheduled
 };
 
 // Process memory is laid out contiguously, low addresses first:
