@@ -8,17 +8,17 @@
 #include "pstat.h"
 
 int removeProcess(int pid, int pq_num);
-int addProcess(int pid, int pq_num);
+int addProcess(struct proc *newProc, int pq_num);
 int cleanupQueue(int pq_num);
-int moveToEnd(int pid, int pq_num);
-int findProc(int pid, struct proc *p);
+int moveToEnd(struct proc *p, int pq_num);
+void printQueues(void);
 
 const int timeslice[4] = {NULL, 32, 16, 8};
 const int timeslice_RR[4] = {64, 4, 2, 1};
 
 typedef struct priorityQueue
 {
-  int procs[NPROC];
+  struct proc *procs[NPROC];
   int num_procs;
 } priorityQueue;
 
@@ -70,13 +70,12 @@ found:
   {
     p->ticks[j] = 0;
     p->wait_ticks[j] = 0;
-    // start priority 3
-    p->priority = 3;
-    // Increment number of processes in pq3
-    queues[3].num_procs++;
-    // Add pid to pq3
-    queues[3].procs[queues[3].num_procs] = p->pid;
   }
+
+  // start priority 3
+  p->priority = 3;
+  // Increment number of processes in pq3
+  addProcess(p, 3);
   // ********************************************************
 
   release(&ptable.lock);
@@ -296,117 +295,104 @@ int wait(void)
 //      via swtch back to the scheduler.
 void scheduler(void)
 {
-  // Do we want to check which process is RUNNING?
-  // or are they set to RUNNABLE after 10ms?
-  // What is the function to run a new proc
-
-  // Check q3:
-  //        run all processes in 13
-  // Check q2
-  //
-
   struct proc *p;
+  // struct proc *proc;
+  // struct proc *curr;
 
   for (;;)
   {
     // Enable interrupts on this processor.
     sti();
+
+    // Loop over process table looking for process to run.
+
     acquire(&ptable.lock);
 
     int foundProc = 0;
-    int qn = 3;
-    int pos = 0;
-
-    // Iterate the queues
-    // Try to find a runnable process of the highest priority
-    // increment the wait_ticks of all other procs
-    for (qn = 3; qn >= 0; qn--)
+    int i, j;
+    for (i = 3; i >= 0; i--)
     {
-      for (pos = 0; pos < queues[qn].num_procs; pos++)
+      for (j = 0; j < queues[i].num_procs; j++)
       {
-        findProc(queues[qn].procs[0], p);
-        if (p->state == RUNNABLE && !foundProc)
+        p = queues[i].procs[0];
+        if (p->state == RUNNABLE)
+        {
           foundProc = 1;
+          break;
+        }
         else
         {
-          moveToEnd(queues[qn].procs[0], qn);
-          p->wait_ticks[qn]++;
+          // cprintf("before move to end\n");
+          moveToEnd(p, i);
+          // cprintf("after move to end\n");
         }
       }
+      if (foundProc == 1)
+        break;
     }
 
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if (foundProc == 1)
     {
-      if (p->state != RUNNABLE)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
       proc = 0;
     }
-    release(&ptable.lock);
 
-    // Value to measure whether a process has run out its time slice
-    int mod_slice;
-    int mod_RR_slice;
-    // If current proc - increment ticks
-    // If not - increment wait_ticks
-    if (p->state == RUNNING && p->priority != 0)
+    //cprintf("finished proc\n");
+
+    //printQueues();
+
+    //cprintf("after print queues\n");
+
+    // Values to measure whether a process has run out its time slice
+    int mod_slice, mod_RR_slice;
+
+    p->ticks[p->priority]++;
+    //cprintf("priority = %d\n", p->priority);
+    if (p->priority != 0)
     {
-      //curr = p;
-      p->ticks[p->priority]++;
+      mod_slice = (p->ticks[p->priority]) % timeslice[p->priority];
+      mod_RR_slice = (p->ticks[p->priority]) % timeslice_RR[p->priority];
       if (queues[p->priority].num_procs > 1)
       {
-        mod_RR_slice = (p->ticks[p->priority]) % timeslice_RR[p->priority];
         if (mod_RR_slice == 0)
-        {
-          moveToEnd(p->pid, p->priority);
-        }
-        // Check if round robin slice has run outgfklsdjf
+          moveToEnd(p, p->priority);
       }
-      mod_slice = (p->ticks[p->priority]) % timeslice[p->priority];
-      // Check if round robin slice has run out
+
       if (mod_slice == 0)
       {
-        // DEMOTE process
         removeProcess(p->pid, p->priority);
-        addProcess(p->pid, p->priority - 1);
         p->priority--;
+        addProcess(p, p->priority);
       }
     }
-    else
-      p->wait_ticks[p->priority]++;
-  }
-}
 
-int findProc(int pid, struct proc *p)
-{
-  struct proc *process;
-  for (process = ptable.proc; process < &ptable.proc[NPROC]; process++)
-  {
-    if (process->pid == pid)
+    //cprintf("after slice checks\n");
+
+    int justRan = p->pid;
+    for (i = 3; i >= 0; i--)
     {
-      process = p;
-      return 0;
+      for (j = 0; j < queues[i].num_procs; j++)
+      {
+        if (queues[i].procs[j]->pid != justRan)
+        {
+          queues[i].procs[j]->wait_ticks[i]++;
+        }
+      }
     }
+
+    //cprintf("after ticks update\n");
+    release(&ptable.lock);
   }
-  return 1;
 }
 
-int moveToEnd(int pid, int pq_num)
+int moveToEnd(struct proc *p, int pq_num)
 {
-  removeProcess(pid, pq_num);
-  addProcess(pid, pq_num);
-  cleanupQueue(pq_num);
+  removeProcess(p->pid, pq_num);
+  addProcess(p, pq_num);
   return 0;
 }
 
@@ -415,21 +401,24 @@ int removeProcess(int pid, int pq_num)
   int i = 0;
   for (i = 0; i < NPROC; i++)
   {
-    int tblPid = queues[pq_num].procs[i];
-    if (tblPid == pid)
+    struct proc *tblProc = queues[pq_num].procs[i];
+    if (tblProc->pid == pid)
     {
-      queues[pq_num].procs[i] = NULL;
+      queues[pq_num].procs[i] = 0;
+      queues[pq_num].num_procs--;
+      break;
     }
-    cleanupQueue(pq_num);
   }
+  cleanupQueue(pq_num);
 
   return 0;
 }
 
-int addProcess(int pid, int pq_num)
+int addProcess(struct proc *newProc, int pq_num)
 {
   int numProcs = queues[pq_num].num_procs;
-  queues[pq_num].procs[numProcs] = pid;
+  queues[pq_num].procs[numProcs] = newProc;
+  queues[pq_num].num_procs++;
   cleanupQueue(pq_num);
   return 0;
 }
@@ -438,10 +427,10 @@ int cleanupQueue(int pq_num)
 {
   int i = 0;
   int pos = 0;
-  int newArr[NPROC];
+  struct proc *newArr[NPROC];
   for (i = 0; i < NPROC; i++)
   {
-    if (queues[pq_num].procs[i] != NULL)
+    if (queues[pq_num].procs[i] != 0)
     {
       newArr[pos] = queues[pq_num].procs[i];
       pos++;
@@ -450,8 +439,13 @@ int cleanupQueue(int pq_num)
 
   for (i = 0; i < NPROC; i++)
   {
-    queues[pq_num].procs[i] = newArr[i];
+    if (i < queues[pq_num].num_procs)
+      queues[pq_num].procs[i] = newArr[i];
+    else
+      queues[pq_num].procs[i] = 0;
   }
+  // cprintf("num of procs %d\n", queues[pq_num].num_procs);
+  // printQueues();
 
   return 0;
 }
@@ -612,25 +606,38 @@ void procdump(void)
   }
 }
 
+void printQueues()
+{
+  int i, j;
+  for (i = 0; i < 4; i++)
+  {
+    cprintf("************ QUEUE %d\n", i);
+    for (j = 0; j < queues[i].num_procs; j++)
+    {
+
+      int pid = queues[i].procs[j]->pid;
+      cprintf("%d (%d) -- ", pid, j);
+    }
+    cprintf("\n");
+  }
+}
+
 int getprocinfo(struct pstat *pstat_table)
 {
-  struct proc *p;
+  // return 0;
+  acquire(&ptable.lock);
   int i = 0;
+  struct proc *p;
+  // printQueues();
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    // inuse = is it a valid entry in ptable - check if pid = 0
-    pstat_table->inuse[i] = (proc->pid != 0);
-    pstat_table->pid[i] = proc->pid;
-    pstat_table->priority[i] = proc->priority;
-    pstat_table->state[i] = proc->state;
-
-    int j = 0;
-    for (j = 0; j < 4; j++)
-    {
-      pstat_table->ticks[i][j] = proc->ticks[j];
-      pstat_table->wait_ticks[i][j] = proc->wait_ticks[j];
-    }
+    cprintf("i = %d\n", i);
+    pstat_table->inuse[i] = 0;
+    i++;
   }
+  cprintf("got here before release\n");
+  release(&ptable.lock);
+  cprintf("got here\n");
 
   return 0;
 }

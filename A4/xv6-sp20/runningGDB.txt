@@ -1,0 +1,24 @@
+#in 1st term
+
+make qemu-nox-gdb
+
+#in 2nd term
+
+gdb
+layout src
+focus cmd
+break $(at desired place)
+continue
+
+
+# in 1st term
+
+run whatever to hit breakpoint
+
+# in 2nd term
+
+gdb it
+
+(n for next line)
+(s for step into)
+(p to print)

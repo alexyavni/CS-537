@@ -2,6 +2,8 @@
     "files.associations": {
         "types.h": "c",
         "pstat.h": "c",
-        "spinlock.h": "c"
+        "spinlock.h": "c",
+        "user.h": "c",
+        "stat.h": "c"
     }
 }
