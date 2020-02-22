@@ -10,16 +10,13 @@
 int
 main(int argc, char *argv[])
 {
-  printf(1, "AAAAAAAAAAAAAAAAAAAAAAAAAA");
   struct pstat st;
   check(getprocinfo(&st) == 0, "getporcinfo");
-  printf(1, "AAAAAAAAAAAAAAAAAAAAAAAAAA");
 
   int i, j;
   int pid = getpid();
   int found_self = 0;
   for(i = 0; i < NPROC; i++) {
-    printf(1, "inside test LOOOOOP\n");
     if (st.inuse[i]) {
       printf(1, "pid: %d priority: %d\n ", st.pid[i], st.priority[i]);
       if (st.pid[i] == pid) {

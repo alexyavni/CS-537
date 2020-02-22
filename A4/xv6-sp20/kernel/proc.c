@@ -341,16 +341,11 @@ void scheduler(void)
       proc = 0;
     }
 
-    //cprintf("finished proc\n");
-
-    //printQueues();
-
-    //cprintf("after print queues\n");
-
     // Values to measure whether a process has run out its time slice
     int mod_slice, mod_RR_slice;
 
     p->ticks[p->priority]++;
+    p->wait_ticks[p->priority] = 0;
     //cprintf("priority = %d\n", p->priority);
     if (p->priority != 0)
     {
@@ -364,6 +359,7 @@ void scheduler(void)
 
       if (mod_slice == 0)
       {
+        // p->wait_ticks[p->priority] = 0;
         removeProcess(p->pid, p->priority);
         p->priority--;
         addProcess(p, p->priority);
@@ -624,20 +620,38 @@ void printQueues()
 
 int getprocinfo(struct pstat *pstat_table)
 {
-  // return 0;
   acquire(&ptable.lock);
   int i = 0;
+  int j = 0;
   struct proc *p;
-  // printQueues();
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    cprintf("i = %d\n", i);
-    pstat_table->inuse[i] = 0;
-    i++;
+    if(p->state == UNUSED)
+    {
+      pstat_table->inuse[i] = 0;
+      pstat_table->pid[i] = 0;
+      pstat_table->priority[i] = 0;
+      pstat_table->state[i] = UNUSED;
+      for(j = 0; j < 3; j++)
+      {
+        pstat_table->ticks[i][j] = 0;
+        pstat_table->wait_ticks[i][j] = 0;
+      }
+      i++;
+      continue;
+    }
+      pstat_table->inuse[i] = 1;
+      pstat_table->pid[i] = p->pid;
+      pstat_table->priority[i] = p->priority;
+      pstat_table->state[i] = p->state;
+      for(j = 0; j < 3; j++)
+      {
+        pstat_table->ticks[i][j] = p->ticks[j];
+        pstat_table->wait_ticks[i][j] = p->wait_ticks[j];
+      }
+      i++;
   }
-  cprintf("got here before release\n");
   release(&ptable.lock);
-  cprintf("got here\n");
 
   return 0;
 }
