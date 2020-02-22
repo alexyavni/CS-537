@@ -15,6 +15,7 @@ void printQueues(void);
 
 const int timeslice[4] = {NULL, 32, 16, 8};
 const int timeslice_RR[4] = {64, 4, 2, 1};
+const int starve_time[4] = {640, 320, 160, 80};
 
 typedef struct priorityQueue
 {
@@ -359,7 +360,7 @@ void scheduler(void)
 
       if (mod_slice == 0)
       {
-        // p->wait_ticks[p->priority] = 0;
+        p->wait_ticks[p->priority] = 0;
         removeProcess(p->pid, p->priority);
         p->priority--;
         addProcess(p, p->priority);
@@ -367,16 +368,43 @@ void scheduler(void)
     }
 
     //cprintf("after slice checks\n");
-
+    struct proc * starveList[NPROC];
+    int starve_cnt = 0;
+    struct proc * curr_proc;
     int justRan = p->pid;
     for (i = 3; i >= 0; i--)
     {
       for (j = 0; j < queues[i].num_procs; j++)
       {
-        if (queues[i].procs[j]->pid != justRan)
+        curr_proc = queues[i].procs[j];
+        if (curr_proc->pid != justRan)
         {
-          queues[i].procs[j]->wait_ticks[i]++;
+          curr_proc->wait_ticks[i]++;
+          if(curr_proc->wait_ticks[i] >= starve_time[i])
+          {
+            // cprintf("in starve check\n");
+            // cprintf("starve time for queue %d = %d\n", curr_proc->priority, starve_time[curr_proc->priority]);
+            // cprintf("proc wait ticks = %d\n", curr_proc->wait_ticks[i]);
+            starveList[starve_cnt] = curr_proc;
+            starve_cnt ++;
+          }
         }
+      }
+    }
+
+    if(starve_cnt > 0)
+      // cprintf("starve list: %d", starveList[0]->pid);
+
+    for(i = 0; i < starve_cnt; i++)
+    {
+      curr_proc = starveList[i];
+      if(curr_proc->priority < 3)
+      {
+        // cprintf("in starve loop");
+        removeProcess(curr_proc->pid, curr_proc->priority);
+        curr_proc -> wait_ticks[curr_proc->priority] = 0;
+        curr_proc -> priority++;
+        addProcess(curr_proc, curr_proc->priority);
       }
     }
 
