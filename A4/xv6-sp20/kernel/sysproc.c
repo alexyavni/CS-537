@@ -92,3 +92,8 @@ int sys_getprocinfo(void)
     return -1;
   return getprocinfo(p_stat);
 }
+
+int sys_boostproc(void)
+{
+  return boostproc();
+}

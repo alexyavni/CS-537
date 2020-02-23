@@ -12,6 +12,7 @@ int addProcess(struct proc *newProc, int pq_num);
 int cleanupQueue(int pq_num);
 int moveToEnd(struct proc *p, int pq_num);
 void printQueues(void);
+int boostproc(void);
 
 const int timeslice[4] = {NULL, 32, 16, 8};
 const int timeslice_RR[4] = {64, 4, 2, 1};
@@ -342,71 +343,88 @@ void scheduler(void)
       proc = 0;
     }
 
+    p->ticks[p->priority] = p->ticks[p->priority] + 1;
+
     // Values to measure whether a process has run out its time slice
     int mod_slice, mod_RR_slice;
 
-    p->ticks[p->priority]++;
+    if (p->priority == 3)
+    {
+      cprintf("proc pid = %d, priority %d, ticks = %d\n", p->pid, p->priority, p->ticks[p->priority]);
+    }
+
     p->wait_ticks[p->priority] = 0;
     //cprintf("priority = %d\n", p->priority);
     if (p->priority != 0)
     {
       mod_slice = (p->ticks[p->priority]) % timeslice[p->priority];
       mod_RR_slice = (p->ticks[p->priority]) % timeslice_RR[p->priority];
-      if (queues[p->priority].num_procs > 1)
+      // cprintf("modRR = %d, mod = %d\n", mod_RR_slice, mod_slice);
+      if (queues[p->priority].num_procs > 1 && p->priority > 0)
       {
         if (mod_RR_slice == 0)
+        {
+          // printQueues();
+          cprintf("END OF LINE %d\n", p->pid);
           moveToEnd(p, p->priority);
+        }
       }
 
       if (mod_slice == 0)
       {
+        cprintf("---------------------------------------------------\n DEMOTING %d with priority = %d, ticks = %d\n", p->pid, p->priority, p->ticks[3]);
+        printQueues();
         p->wait_ticks[p->priority] = 0;
         removeProcess(p->pid, p->priority);
-        p->priority--;
+        p->priority = p->priority - 1;
+        cprintf("NEW PRIORITY = %d\n", p->priority);
         addProcess(p, p->priority);
+        cprintf("~           ~             ~            ~\n");
+        printQueues();
+        cprintf("---------------------------------------------------\n");
       }
     }
 
-    //cprintf("after slice checks\n");
-    struct proc * starveList[NPROC];
-    int starve_cnt = 0;
-    struct proc * curr_proc;
-    int justRan = p->pid;
-    for (i = 3; i >= 0; i--)
-    {
-      for (j = 0; j < queues[i].num_procs; j++)
-      {
-        curr_proc = queues[i].procs[j];
-        if (curr_proc->pid != justRan)
-        {
-          curr_proc->wait_ticks[i]++;
-          if(curr_proc->wait_ticks[i] >= starve_time[i])
-          {
-            // cprintf("in starve check\n");
-            // cprintf("starve time for queue %d = %d\n", curr_proc->priority, starve_time[curr_proc->priority]);
-            // cprintf("proc wait ticks = %d\n", curr_proc->wait_ticks[i]);
-            starveList[starve_cnt] = curr_proc;
-            starve_cnt ++;
-          }
-        }
-      }
-    }
+    // //cprintf("after slice checks\n");
+    // struct proc *starveList[NPROC];
+    // int starve_cnt = 0;
+    // struct proc *curr_proc;
+    // int justRan = p->pid;
+    // for (i = 3; i >= 0; i--)
+    // {
+    //   for (j = 0; j < queues[i].num_procs; j++)
+    //   {
+    //     curr_proc = queues[i].procs[j];
+    //     if (curr_proc->pid != justRan)
+    //     {
+    //       curr_proc->wait_ticks[i]++;
+    //       if (curr_proc->wait_ticks[i] >= starve_time[i])
+    //       {
+    //         // cprintf("in starve check\n");
+    //         // cprintf("starve time for queue %d = %d\n", curr_proc->priority, starve_time[curr_proc->priority]);
+    //         // cprintf("proc wait ticks = %d\n", curr_proc->wait_ticks[i]);
+    //         starveList[starve_cnt] = curr_proc;
+    //         starve_cnt++;
+    //       }
+    //     }
+    //   }
+    // }
 
-    if(starve_cnt > 0)
-      // cprintf("starve list: %d", starveList[0]->pid);
+    // if (starve_cnt > 0)
+    //   // cprintf("starve list: %d", starveList[0]->pid);
 
-    for(i = 0; i < starve_cnt; i++)
-    {
-      curr_proc = starveList[i];
-      if(curr_proc->priority < 3)
-      {
-        // cprintf("in starve loop");
-        removeProcess(curr_proc->pid, curr_proc->priority);
-        curr_proc -> wait_ticks[curr_proc->priority] = 0;
-        curr_proc -> priority++;
-        addProcess(curr_proc, curr_proc->priority);
-      }
-    }
+    //   for (i = 0; i < starve_cnt; i++)
+    //   {
+    //     curr_proc = starveList[i];
+    //     if (curr_proc->priority < 3)
+    //     {
+    //       // cprintf("in starve loop");
+    //       removeProcess(curr_proc->pid, curr_proc->priority);
+    //       curr_proc->wait_ticks[curr_proc->priority] = 0;
+    //       curr_proc->priority++;
+    //       addProcess(curr_proc, curr_proc->priority);
+    //     }
+    //   }
 
     //cprintf("after ticks update\n");
     release(&ptable.lock);
@@ -640,10 +658,45 @@ void printQueues()
     {
 
       int pid = queues[i].procs[j]->pid;
-      cprintf("%d (%d) -- ", pid, j);
+      cprintf("%d -- ", pid);
     }
     cprintf("\n");
   }
+}
+
+int boostproc(void)
+{
+  return 0;
+  // struct proc *boosted;
+  // struct proc *boostList[NPROC];
+  // int boost_cnt;
+  // int i, j;
+
+  // for (i = 0; i < 3; i++)
+  // {
+  //   for (j = 0; j < queues[i].num_procs; j++)
+  //   {
+  //     boosted = queues[i].procs[j];
+  //     if (boosted->state == RUNNING)
+  //     {
+  //       boostList[boost_cnt] = boosted;
+  //       boost_cnt++;
+  //     }
+  //   }
+  // }
+
+  // if (boost_cnt > 0)
+  // {
+  //   for (i = 0; i < boost_cnt; i++)
+  //   {
+  //     boosted = boostList[i];
+  //     removeProcess(boosted->pid, boosted->priority);
+  //     boosted->wait_ticks[i] = 0;
+  //     boosted->priority++;
+  //     addProcess(boosted, boosted->priority);
+  //   }
+  // }
+  // return 0;
 }
 
 int getprocinfo(struct pstat *pstat_table)
@@ -654,13 +707,13 @@ int getprocinfo(struct pstat *pstat_table)
   struct proc *p;
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if(p->state == UNUSED)
+    if (p->state == UNUSED)
     {
       pstat_table->inuse[i] = 0;
       pstat_table->pid[i] = 0;
       pstat_table->priority[i] = 0;
       pstat_table->state[i] = UNUSED;
-      for(j = 0; j < 3; j++)
+      for (j = 0; j < 3; j++)
       {
         pstat_table->ticks[i][j] = 0;
         pstat_table->wait_ticks[i][j] = 0;
@@ -668,16 +721,16 @@ int getprocinfo(struct pstat *pstat_table)
       i++;
       continue;
     }
-      pstat_table->inuse[i] = 1;
-      pstat_table->pid[i] = p->pid;
-      pstat_table->priority[i] = p->priority;
-      pstat_table->state[i] = p->state;
-      for(j = 0; j < 3; j++)
-      {
-        pstat_table->ticks[i][j] = p->ticks[j];
-        pstat_table->wait_ticks[i][j] = p->wait_ticks[j];
-      }
-      i++;
+    pstat_table->inuse[i] = 1;
+    pstat_table->pid[i] = p->pid;
+    pstat_table->priority[i] = p->priority;
+    pstat_table->state[i] = p->state;
+    for (j = 0; j < 4; j++)
+    {
+      pstat_table->ticks[i][j] = p->ticks[j];
+      pstat_table->wait_ticks[i][j] = p->wait_ticks[j];
+    }
+    i++;
   }
   release(&ptable.lock);
 
