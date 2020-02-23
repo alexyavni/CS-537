@@ -8,7 +8,25 @@ build xv6 using make
 **********************************************************************
 Trying to build project using make
 make
-make: Nothing to be done for 'all'.
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG kernel/proc.c -MF kernel/proc.d -MT kernel/proc.d -MT kernel/proc.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o kernel/proc.o kernel/proc.c
+ld  -m    elf_i386 -nostdlib --omagic \
+	--section-start=.text=0x100000 --entry=main --output=kernel/kernel \
+	kernel/multiboot.o kernel/data.o kernel/bio.o kernel/console.o kernel/exec.o kernel/file.o kernel/fs.o kernel/ide.o kernel/ioapic.o kernel/kalloc.o kernel/kbd.o kernel/lapic.o kernel/main.o kernel/mp.o kernel/picirq.o kernel/pipe.o kernel/proc.o kernel/spinlock.o kernel/string.o kernel/swtch.o kernel/syscall.o kernel/sysfile.o kernel/sysproc.o kernel/timer.o kernel/trapasm.o kernel/trap.o kernel/uart.o kernel/vectors.o kernel/vm.o \
+	-b binary initcode bootother
+dd if=/dev/zero of=xv6.img count=10000
+10000+0 records in
+10000+0 records out
+5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.0218974 s, 234 MB/s
+dd if=kernel/bootblock of=xv6.img conv=notrunc
+1+0 records in
+1+0 records out
+512 bytes copied, 0.000118795 s, 4.3 MB/s
+dd if=kernel/kernel of=xv6.img seek=1 conv=notrunc
+269+1 records in
+269+1 records out
+138140 bytes (138 kB, 135 KiB) copied, 0.000563953 s, 245 MB/s
 
 
 test build PASSED
@@ -33,6 +51,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -40,6 +59,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -50,9 +70,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 475 blocks have been allocated
+balloc: first 542 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -66,142 +87,9 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
 TEST PASSED
 
 test inuse_basic PASSED (1 of 1)
@@ -226,6 +114,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -233,6 +122,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -243,9 +133,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 475 blocks have been allocated
+balloc: first 542 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -259,138 +150,9 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
 pid: 1 priority: 0
  	 level 3 ticks used 8
 	 level 3 ticks waited for 0
@@ -398,14 +160,13 @@ pid: 1 priority: 0
 	 level 2 ticks waited for 0
 	 level 1 ticks used 32
 	 level 1 ticks waited for 0
-	 level 0 ticks used 12024
-	 level 0 ticks waited for 0
-pid: 2 priority: 2
- 	 level 3 ticks used 8
-	 level 3 ticks waited for 0
-	 level 2 ticks used 12
+	 level 0 ticks used 11911
+	 level 0 ticks waited for 2
+pid: 2 priority: 3
+ 	 level 3 ticks used 9
+	 level 3 ticks waited for 23
+	 level 2 ticks used 10
 	 level 2 ticks waited for 0
-END OF LINE 3
 	 level 1 ticks used 0
 	 level 1 ticks waited for 0
 	 level 0 ticks used 0
@@ -413,14 +174,13 @@ END OF LINE 3
 pid: 3 priority: 2
  	 level 3 ticks used 8
 	 level 3 ticks waited for 0
-	 level 2 ticks used 0
+	 level 2 ticks used 1
 	 level 2 ticks waited for 0
 	 level 1 ticks used 0
 	 level 1 ticks waited for 0
 	 level 0 ticks used 0
 	 level 0 ticks waited for 0
-TEST PASSEDEND OF LINE 3
-
+TEST PASSED
 
 test getprocinfo PASSED (1 of 1)
  (Basic test on getprocinfo)
@@ -444,6 +204,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -451,6 +212,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -461,9 +223,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 478 blocks have been allocated
+balloc: first 545 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -477,207 +240,30 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
----------------------------------------------------
- DEMOTING 3 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 3 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 3 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 pid: 1
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 19931
+	 level 0 ticks used 19610
 pid: 2
-	 level 3 ticks used 8
-	 level 2 ticks used 12
+	 level 3 ticks used 10
+	 level 2 ticks used 10
 	 level 1 ticks used 0
 	 level 0 ticks used 0
 pid: 3
-	 level 3 ticks used 8
+	 level 3 ticks used 24
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 49
-TEST PASSED
+	 level 0 ticks used 27
+user/tester.c:37 check (st.ticks[i][3] == 8) failed: current process should run for 8 ticks in level 3
+$ 
 
-test single_job_long PASSED (1 of 1)
+test single_job_long FAILED (0 of 1)
  (Test on a long running workload)
+ tester failed
 
 starting boostproc
 
@@ -698,6 +284,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -705,6 +292,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -715,9 +303,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 476 blocks have been allocated
+balloc: first 543 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -731,199 +320,18 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
----------------------------------------------------
- DEMOTING 3 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 3 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 3 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-pid: 3 priority: 0
- 	 level 3 ticks used 8
+pid: 3 priority: 1
+ 	 level 3 ticks used 24
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 47
-user/tester.c:33 check (st.priority[i] == 1) failed: the long CPU-bound process should be at priority 1 after boosting
-$ 
+	 level 0 ticks used 26
+TEST PASSED
 
-test boostproc FAILED (0 of 1)
+test boostproc PASSED (1 of 1)
  (Basic test on boostproc)
- tester failed
 
 starting new_process
 
@@ -944,6 +352,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -951,6 +360,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -961,9 +371,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 476 blocks have been allocated
+balloc: first 543 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -977,200 +388,20 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
----------------------------------------------------
- DEMOTING 3 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 3 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 3 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 pid: 3 priority: 0
- 	 level 3 ticks used 8
-proc pid = 4, priority 3, ticks = 1
+ 	 level 3 ticks used 24
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 48
+	 level 0 ticks used 28
 pid: 4 priority: 3
  	 level 3 ticks used 0
 	 level 2 ticks used 0
 	 level 1 ticks used 0
 	 level 0 ticks used 0
-TEST PASSEDproc 
+TEST PASSED
 
 test new_process PASSED (1 of 1)
  (New process should have higher priority)
@@ -1194,6 +425,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -1201,6 +433,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -1211,9 +444,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 477 blocks have been allocated
+balloc: first 544 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -1227,566 +461,9 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
----------------------------------------------------
- DEMOTING 3 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 3 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 3 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-proc pid = 4, priority 3, ticks = 1
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 1
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 1
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 1
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 2
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 2
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 2
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 2
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 3
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 3
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 3
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 3
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 4
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 4
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 4
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 4
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 5
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 5
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 5
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 5
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 6
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 6
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 6
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 6
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 7
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 7
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 7
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 7
-END OF LINE 7
-proc pid = 4, priority 3, ticks = 8
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-5 -- 6 -- 7 -- 4 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 
-************ QUEUE 3
-5 -- 6 -- 7 -- 
----------------------------------------------------
-proc pid = 5, priority 3, ticks = 8
-END OF LINE 5
----------------------------------------------------
- DEMOTING 5 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 
-************ QUEUE 3
-6 -- 7 -- 5 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 
-************ QUEUE 3
-6 -- 7 -- 
----------------------------------------------------
-proc pid = 6, priority 3, ticks = 8
-END OF LINE 6
----------------------------------------------------
- DEMOTING 6 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 
-************ QUEUE 3
-7 -- 6 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 6 -- 
-************ QUEUE 3
-7 -- 
----------------------------------------------------
-proc pid = 7, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 7 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 6 -- 
-************ QUEUE 3
-7 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 6 -- 7 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-5 -- 6 -- 7 -- 2 -- 4 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 
-************ QUEUE 2
-5 -- 6 -- 7 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 5
----------------------------------------------------
- DEMOTING 5 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 
-************ QUEUE 2
-6 -- 7 -- 2 -- 5 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 
-************ QUEUE 2
-6 -- 7 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 6
----------------------------------------------------
- DEMOTING 6 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 
-************ QUEUE 2
-7 -- 2 -- 6 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 6 -- 
-************ QUEUE 2
-7 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 7
----------------------------------------------------
- DEMOTING 7 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 6 -- 
-************ QUEUE 2
-2 -- 7 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 6 -- 7 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
-END OF LINE 5
-END OF LINE 6
-END OF LINE 7
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-5 -- 6 -- 7 -- 4 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 
-************ QUEUE 1
-5 -- 6 -- 7 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 5
----------------------------------------------------
- DEMOTING 5 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 
-************ QUEUE 1
-6 -- 7 -- 5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 7 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 6
----------------------------------------------------
- DEMOTING 6 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-7 -- 6 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 
-************ QUEUE 1
-7 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 7 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 
-************ QUEUE 1
-7 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 pid: 4
 	 level 3 ticks used 8
 	 level 3 waited for ticks 0
@@ -1794,8 +471,8 @@ pid: 4
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 0
-	 level 0 waited for ticks 0
+	 level 0 ticks used 25
+	 level 0 waited for ticks 75
 pid: 5
 	 level 3 ticks used 8
 	 level 3 waited for ticks 0
@@ -1803,8 +480,8 @@ pid: 5
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 0
-	 level 0 waited for ticks 0
+	 level 0 ticks used 25
+	 level 0 waited for ticks 50
 pid: 6
 	 level 3 ticks used 8
 	 level 3 waited for ticks 0
@@ -1812,7 +489,43 @@ pid: 6
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 0
+	 level 0 ticks used 25
+	 level 0 waited for ticks 25
+pid: 7
+	 level 3 ticks used 8
+	 level 3 waited for ticks 0
+	 level 2 ticks used 16
+	 level 2 waited for ticks 0
+	 level 1 ticks used 32
+	 level 1 waited for ticks 0
+	 level 0 ticks used 25
+	 level 0 waited for ticks 0
+pid: 4
+	 level 3 ticks used 8
+	 level 3 waited for ticks 36169
+	 level 2 ticks used 16
+	 level 2 waited for ticks 0
+	 level 1 ticks used 32
+	 level 1 waited for ticks 0
+	 level 0 ticks used 25
+	 level 0 waited for ticks 0
+pid: 5
+	 level 3 ticks used 8
+	 level 3 waited for ticks 36144
+	 level 2 ticks used 16
+	 level 2 waited for ticks 0
+	 level 1 ticks used 32
+	 level 1 waited for ticks 0
+	 level 0 ticks used 25
+	 level 0 waited for ticks 0
+pid: 6
+	 level 3 ticks used 8
+	 level 3 waited for ticks 36119
+	 level 2 ticks used 16
+	 level 2 waited for ticks 0
+	 level 1 ticks used 32
+	 level 1 waited for ticks 0
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 7
 	 level 3 ticks used 8
@@ -1821,34 +534,34 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 0
+	 level 0 ticks used 37136
 	 level 0 waited for ticks 0
 pid: 4
 	 level 3 ticks used 8
-	 level 3 waited for ticks 0
+	 level 3 waited for ticks 73424
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 35
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 5
 	 level 3 ticks used 8
-	 level 3 waited for ticks 0
+	 level 3 waited for ticks 73399
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 34
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 6
 	 level 3 ticks used 8
-	 level 3 waited for ticks 0
+	 level 3 waited for ticks 73374
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 34
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 7
 	 level 3 ticks used 8
@@ -1857,34 +570,34 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 35
+	 level 0 ticks used 74288
 	 level 0 waited for ticks 0
 pid: 4
 	 level 3 ticks used 8
-	 level 3 waited for ticks 0
+	 level 3 waited for ticks 110306
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 35
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 5
 	 level 3 ticks used 8
-	 level 3 waited for ticks 0
+	 level 3 waited for ticks 110281
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 34
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 6
 	 level 3 ticks used 8
-	 level 3 waited for ticks 0
+	 level 3 waited for ticks 110256
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 34
+	 level 0 ticks used 25
 	 level 0 waited for ticks 0
 pid: 7
 	 level 3 ticks used 8
@@ -1893,43 +606,7 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 36600
-	 level 0 waited for ticks 0
-pid: 4
-	 level 3 ticks used 8
-	 level 3 waited for ticks 0
-	 level 2 ticks used 16
-	 level 2 waited for ticks 0
-	 level 1 ticks used 32
-	 level 1 waited for ticks 0
-	 level 0 ticks used 35
-	 level 0 waited for ticks 0
-pid: 5
-	 level 3 ticks used 8
-	 level 3 waited for ticks 0
-	 level 2 ticks used 16
-	 level 2 waited for ticks 0
-	 level 1 ticks used 32
-	 level 1 waited for ticks 0
-	 level 0 ticks used 34
-	 level 0 waited for ticks 0
-pid: 6
-	 level 3 ticks used 8
-	 level 3 waited for ticks 0
-	 level 2 ticks used 16
-	 level 2 waited for ticks 0
-	 level 1 ticks used 32
-	 level 1 waited for ticks 0
-	 level 0 ticks used 34
-	 level 0 waited for ticks 0
-pid: 7
-	 level 3 ticks used 8
-	 level 3 waited for ticks 0
-	 level 2 ticks used 16
-	 level 2 waited for ticks 0
-	 level 1 ticks used 32
-	 level 1 waited for ticks 0
-	 level 0 ticks used 73330
+	 level 0 ticks used 111067
 	 level 0 waited for ticks 0
 TEST PASSED
 
@@ -1955,6 +632,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -1962,6 +640,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -1972,9 +651,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 477 blocks have been allocated
+balloc: first 544 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -1988,376 +668,9 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
----------------------------------------------------
- DEMOTING 3 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 3 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 3 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-proc pid = 4, priority 3, ticks = 1
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 1
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 2
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 2
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 3
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 3
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 4
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 4
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 5
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 5
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 6
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 6
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 7
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 7
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 8
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-5 -- 4 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 
-************ QUEUE 3
-5 -- 
----------------------------------------------------
-proc pid = 5, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 5 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 
-************ QUEUE 3
-5 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-5 -- 2 -- 4 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 
-************ QUEUE 2
-5 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 5
----------------------------------------------------
- DEMOTING 5 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 
-************ QUEUE 2
-2 -- 5 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-5 -- 4 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 
-************ QUEUE 1
-5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 5 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 
-************ QUEUE 1
-5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
@@ -2372,112 +685,112 @@ pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 282
+	 level 0 ticks used 266
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 116
+	 level 0 ticks used 105
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 2597
+	 level 0 ticks used 2614
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 2673
+	 level 0 ticks used 2622
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 4696
+	 level 0 ticks used 4685
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 5198
+	 level 0 ticks used 5157
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 6802
+	 level 0 ticks used 6789
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 7764
+	 level 0 ticks used 7678
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 8909
+	 level 0 ticks used 8878
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 10336
+	 level 0 ticks used 10217
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 10981
+	 level 0 ticks used 10959
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 12864
+	 level 0 ticks used 12743
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 13077
+	 level 0 ticks used 13053
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 15415
+	 level 0 ticks used 15263
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 15175
+	 level 0 ticks used 15148
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 17970
+	 level 0 ticks used 17764
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 17268
+	 level 0 ticks used 17254
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 20527
+	 level 0 ticks used 20293
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 19358
+	 level 0 ticks used 19328
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 23089
+	 level 0 ticks used 22814
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 21445
+	 level 0 ticks used 21394
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 25639
+	 level 0 ticks used 25326
 TEST PASSED
 
 test relinquish PASSED (1 of 1)
@@ -2502,6 +815,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -2509,6 +823,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -2519,9 +834,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 477 blocks have been allocated
+balloc: first 544 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -2535,1146 +851,24 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
----------------------------------------------------
- DEMOTING 3 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 3 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-3 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 3 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-proc pid = 4, priority 3, ticks = 1
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 1
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 2
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 2
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 3
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 3
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 4
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 4
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 5
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 5
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 6
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 6
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 7
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 7
-END OF LINE 5
-proc pid = 4, priority 3, ticks = 8
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-5 -- 6 -- 4 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 
-************ QUEUE 3
-5 -- 6 -- 
----------------------------------------------------
-proc pid = 5, priority 3, ticks = 8
-END OF LINE 5
----------------------------------------------------
- DEMOTING 5 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 
-************ QUEUE 3
-6 -- 5 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 4 -- 5 -- 
-************ QUEUE 3
-6 -- 
----------------------------------------------------
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-5 -- 2 -- 4 -- 
-************ QUEUE 3
-6 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 
-************ QUEUE 2
-5 -- 2 -- 
-************ QUEUE 3
-6 -- 
----------------------------------------------------
-END OF LINE 5
----------------------------------------------------
- DEMOTING 5 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 
-************ QUEUE 2
-2 -- 5 -- 
-************ QUEUE 3
-6 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-4 -- 5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-6 -- 
----------------------------------------------------
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
-END OF LINE 5
-END OF LINE 4
----------------------------------------------------
- DEMOTING 4 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 
-************ QUEUE 1
-5 -- 4 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-6 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 
-************ QUEUE 1
-5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-6 -- 
----------------------------------------------------
----------------------------------------------------
- DEMOTING 5 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 
-************ QUEUE 1
-5 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-6 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-6 -- 
----------------------------------------------------
-proc pid = 6, priority 3, ticks = 1
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 1
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 1
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 1
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 2
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 2
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 2
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 2
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 3
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 3
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 3
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 3
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 4
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 4
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 4
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 4
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 5
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 5
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 5
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 5
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 6
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 6
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 6
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 6
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 7
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 7
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 7
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 7
-END OF LINE 9
-proc pid = 6, priority 3, ticks = 8
-END OF LINE 6
----------------------------------------------------
- DEMOTING 6 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-7 -- 8 -- 9 -- 10 -- 6 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 
-************ QUEUE 3
-7 -- 8 -- 9 -- 10 -- 
----------------------------------------------------
-proc pid = 7, priority 3, ticks = 8
-END OF LINE 7
----------------------------------------------------
- DEMOTING 7 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 
-************ QUEUE 3
-8 -- 9 -- 10 -- 7 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 7 -- 
-************ QUEUE 3
-8 -- 9 -- 10 -- 
----------------------------------------------------
-proc pid = 8, priority 3, ticks = 8
-END OF LINE 8
----------------------------------------------------
- DEMOTING 8 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 7 -- 
-************ QUEUE 3
-9 -- 10 -- 8 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 7 -- 8 -- 
-************ QUEUE 3
-9 -- 10 -- 
----------------------------------------------------
-proc pid = 9, priority 3, ticks = 8
-END OF LINE 9
----------------------------------------------------
- DEMOTING 9 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 7 -- 8 -- 
-************ QUEUE 3
-10 -- 9 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
----------------------------------------------------
- DEMOTING 6 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-7 -- 8 -- 9 -- 2 -- 6 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 
-************ QUEUE 2
-7 -- 8 -- 9 -- 2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 7
----------------------------------------------------
- DEMOTING 7 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 
-************ QUEUE 2
-8 -- 9 -- 2 -- 7 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 7 -- 
-************ QUEUE 2
-8 -- 9 -- 2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 8
----------------------------------------------------
- DEMOTING 8 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 7 -- 
-************ QUEUE 2
-9 -- 2 -- 8 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 7 -- 8 -- 
-************ QUEUE 2
-9 -- 2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 9
----------------------------------------------------
- DEMOTING 9 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 7 -- 8 -- 
-************ QUEUE 2
-2 -- 9 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
-END OF LINE 7
-END OF LINE 8
-END OF LINE 9
-END OF LINE 6
----------------------------------------------------
- DEMOTING 6 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 
-************ QUEUE 1
-7 -- 8 -- 9 -- 6 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 
-************ QUEUE 1
-7 -- 8 -- 9 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 7
----------------------------------------------------
- DEMOTING 7 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 
-************ QUEUE 1
-8 -- 9 -- 7 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 
-************ QUEUE 1
-8 -- 9 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-END OF LINE 8
----------------------------------------------------
- DEMOTING 8 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 
-************ QUEUE 1
-9 -- 8 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 
-************ QUEUE 1
-9 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
----------------------------------------------------
- DEMOTING 9 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 
-************ QUEUE 1
-9 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-10 -- 
----------------------------------------------------
-proc pid = 10, priority 3, ticks = 1
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 1
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 1
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 1
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 2
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 2
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 2
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 2
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 3
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 3
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 3
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 3
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 4
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 4
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 4
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 4
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 5
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 5
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 5
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 5
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 6
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 6
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 6
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 6
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 7
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 7
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 7
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 7
-END OF LINE 13
-proc pid = 10, priority 3, ticks = 8
-END OF LINE 10
----------------------------------------------------
- DEMOTING 10 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-11 -- 12 -- 13 -- 10 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 
-************ QUEUE 3
-11 -- 12 -- 13 -- 
----------------------------------------------------
-proc pid = 11, priority 3, ticks = 8
-END OF LINE 11
----------------------------------------------------
- DEMOTING 11 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 
-************ QUEUE 3
-12 -- 13 -- 11 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 11 -- 
-************ QUEUE 3
-12 -- 13 -- 
----------------------------------------------------
-proc pid = 12, priority 3, ticks = 8
-END OF LINE 12
----------------------------------------------------
- DEMOTING 12 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 11 -- 
-************ QUEUE 3
-13 -- 12 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 11 -- 12 -- 
-************ QUEUE 3
-13 -- 
----------------------------------------------------
-proc pid = 13, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 13 with priority = 3, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 11 -- 12 -- 
-************ QUEUE 3
-13 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 10 -- 11 -- 12 -- 13 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
----------------------------------------------------
- DEMOTING 10 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-11 -- 12 -- 13 -- 2 -- 10 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 
-************ QUEUE 2
-11 -- 12 -- 13 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 11
----------------------------------------------------
- DEMOTING 11 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 
-************ QUEUE 2
-12 -- 13 -- 2 -- 11 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 11 -- 
-************ QUEUE 2
-12 -- 13 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 12
----------------------------------------------------
- DEMOTING 12 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 11 -- 
-************ QUEUE 2
-13 -- 2 -- 12 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 11 -- 12 -- 
-************ QUEUE 2
-13 -- 2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 13
----------------------------------------------------
- DEMOTING 13 with priority = 2, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 11 -- 12 -- 
-************ QUEUE 2
-2 -- 13 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-10 -- 11 -- 12 -- 13 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
-END OF LINE 11
-END OF LINE 12
-END OF LINE 13
-END OF LINE 10
----------------------------------------------------
- DEMOTING 10 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 
-************ QUEUE 1
-11 -- 12 -- 13 -- 10 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 
-************ QUEUE 1
-11 -- 12 -- 13 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 11
----------------------------------------------------
- DEMOTING 11 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 
-************ QUEUE 1
-12 -- 13 -- 11 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 11 -- 
-************ QUEUE 1
-12 -- 13 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 12
----------------------------------------------------
- DEMOTING 12 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 11 -- 
-************ QUEUE 1
-13 -- 12 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 11 -- 12 -- 
-************ QUEUE 1
-13 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 13 with priority = 1, ticks = 8
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 11 -- 12 -- 
-************ QUEUE 1
-13 -- 
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-3 -- 1 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 -- 11 -- 12 -- 13 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 128
-	 The priority of the parent process is 0
-user/tester.c:61 check (st.priority[j] > 0) failed: the priority should be boosted to higher
+	 level 0 ticks used 117
+	 The priority of the parent process is 1
+After priority gets updated and scheduled for some time
+pid: 3
+	 level 3 ticks used 8
+	 level 2 ticks used 16
+	 level 1 ticks used 64
+	 level 0 ticks used 379
+TEST PASSED
 
-$ 
-
-test priority_boost FAILED (0 of 1)
+test priority_boost PASSED (1 of 1)
  ((stronger) test on boostproc)
- tester failed
 
 starting wait_times
 
@@ -3695,6 +889,7 @@ cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 ls
+boostproc
 forktest
 rm
 zombie
@@ -3702,6 +897,7 @@ kill
 test
 grep
 init
+priority_boost
 ln
 getprocinfo
 echo
@@ -3712,9 +908,10 @@ tester
 wc
 sh
 README
+wait_times
 stressfs
 single_job_long
-balloc: first 476 blocks have been allocated
+balloc: first 543 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -3728,2945 +925,301 @@ WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
          Specify the 'raw' format explicitly to remove the restrictions.
 xv6...
 cpu0: starting
-proc pid = 1, priority 3, ticks = 1
-proc pid = 1, priority 3, ticks = 2
-proc pid = 1, priority 3, ticks = 3
-proc pid = 1, priority 3, ticks = 4
-proc pid = 1, priority 3, ticks = 5
-proc pid = 1, priority 3, ticks = 6
-proc pid = 1, priority 3, ticks = 7
-proc pid = 1, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 1 with priority = 3, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-1 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 2, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-
-************ QUEUE 2
-1 -- 
-************ QUEUE 3
-
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
----------------------------------------------------
- DEMOTING 1 with priority = 1, ticks = 8
-************ QUEUE 0
-
-************ QUEUE 1
-1 -- 
-************ QUEUE 2
-
-************ QUEUE 3
-
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-
----------------------------------------------------
 init: starting sh
-proc pid = 2, priority 3, ticks = 1
-proc pid = 2, priority 3, ticks = 2
-proc pid = 2, priority 3, ticks = 3
-proc pid = 2, priority 3, ticks = 4
-proc pid = 2, priority 3, ticks = 5
-proc pid = 2, priority 3, ticks = 6
-proc pid = 2, priority 3, ticks = 7
-proc pid = 2, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 2 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-
-************ QUEUE 3
-2 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-
----------------------------------------------------
 $ tester
 tester
-proc pid = 3, priority 3, ticks = 1
-proc pid = 3, priority 3, ticks = 2
-proc pid = 3, priority 3, ticks = 3
-proc pid = 3, priority 3, ticks = 4
-proc pid = 3, priority 3, ticks = 5
-proc pid = 3, priority 3, ticks = 6
-proc pid = 3, priority 3, ticks = 7
-proc pid = 3, priority 3, ticks = 8
----------------------------------------------------
- DEMOTING 3 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 
-************ QUEUE 3
-3 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-2 -- 3 -- 
-************ QUEUE 3
-
----------------------------------------------------
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-END OF LINE 3
-proc pid = 4, priority 3, ticks = 1
-END OF LINE 4
-proc pid = 5, priority 3, ticks = 1
-END OF LINE 5
-proc pid = 5, priority 3, ticks = 2
-END OF LINE 5
-proc pid = 6, priority 3, ticks = 1
-END OF LINE 6
-proc pid = 6, priority 3, ticks = 2
-END OF LINE 6
-proc pid = 7, priority 3, ticks = 1
-END OF LINE 7
-proc pid = 7, priority 3, ticks = 2
-END OF LINE 7
-proc pid = 7, priority 3, ticks = 3
-END OF LINE 7
-proc pid = 8, priority 3, ticks = 1
-END OF LINE 8
-proc pid = 8, priority 3, ticks = 2
-END OF LINE 8
-proc pid = 8, priority 3, ticks = 3
-END OF LINE 8
-proc pid = 9, priority 3, ticks = 1
-END OF LINE 9
-proc pid = 9, priority 3, ticks = 2
-END OF LINE 9
-proc pid = 9, priority 3, ticks = 3
-END OF LINE 9
-proc pid = 9, priority 3, ticks = 4
-END OF LINE 9
-proc pid = 9, priority 3, ticks = 5
-END OF LINE 9
-proc pid = 10, priority 3, ticks = 1
-END OF LINE 10
-proc pid = 10, priority 3, ticks = 2
-END OF LINE 10
-proc pid = 10, priority 3, ticks = 3
-END OF LINE 10
-proc pid = 10, priority 3, ticks = 4
-END OF LINE 10
-proc pid = 10, priority 3, ticks = 5
-END OF LINE 10
-proc pid = 11, priority 3, ticks = 1
-END OF LINE 11
-proc pid = 11, priority 3, ticks = 2
-END OF LINE 11
-proc pid = 11, priority 3, ticks = 3
-END OF LINE 11
-proc pid = 11, priority 3, ticks = 4
-END OF LINE 11
-proc pid = 11, priority 3, ticks = 5
-END OF LINE 11
-proc pid = 12, priority 3, ticks = 1
-END OF LINE 12
-proc pid = 12, priority 3, ticks = 2
-END OF LINE 12
-proc pid = 12, priority 3, ticks = 3
-END OF LINE 12
-proc pid = 12, priority 3, ticks = 4
-END OF LINE 12
-proc pid = 12, priority 3, ticks = 5
-END OF LINE 12
-proc pid = 12, priority 3, ticks = 6
-END OF LINE 12
-proc pid = 13, priority 3, ticks = 1
-END OF LINE 13
-proc pid = 13, priority 3, ticks = 2
-END OF LINE 13
-proc pid = 13, priority 3, ticks = 3
-END OF LINE 13
-proc pid = 13, priority 3, ticks = 4
-END OF LINE 13
-proc pid = 13, priority 3, ticks = 5
-END OF LINE 13
-proc pid = 13, priority 3, ticks = 6
-END OF LINE 13
-proc pid = 14, priority 3, ticks = 1
-END OF LINE 14
-proc pid = 14, priority 3, ticks = 2
-END OF LINE 14
-proc pid = 14, priority 3, ticks = 3
-END OF LINE 14
-proc pid = 14, priority 3, ticks = 4
-END OF LINE 14
-proc pid = 14, priority 3, ticks = 5
-END OF LINE 14
-proc pid = 14, priority 3, ticks = 6
-END OF LINE 14
-proc pid = 15, priority 3, ticks = 1
-END OF LINE 15
-proc pid = 15, priority 3, ticks = 2
-END OF LINE 15
-proc pid = 15, priority 3, ticks = 3
-END OF LINE 15
-proc pid = 15, priority 3, ticks = 4
-END OF LINE 15
-proc pid = 15, priority 3, ticks = 5
-END OF LINE 15
-proc pid = 15, priority 3, ticks = 6
-END OF LINE 15
-proc pid = 15, priority 3, ticks = 7
-END OF LINE 15
-proc pid = 16, priority 3, ticks = 1
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 2
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 3
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 4
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 5
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 6
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 7
-END OF LINE 16
-proc pid = 16, priority 3, ticks = 8
-END OF LINE 16
----------------------------------------------------
- DEMOTING 16 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 17 -- 16 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 17 -- 
----------------------------------------------------
-proc pid = 17, priority 3, ticks = 1
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 2
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 3
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 4
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 5
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 6
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 7
-END OF LINE 17
-proc pid = 17, priority 3, ticks = 8
-END OF LINE 17
----------------------------------------------------
- DEMOTING 17 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 18 -- 17 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 18 -- 
----------------------------------------------------
-proc pid = 18, priority 3, ticks = 1
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 2
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 3
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 4
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 5
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 6
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 7
-END OF LINE 18
-proc pid = 18, priority 3, ticks = 8
-END OF LINE 18
----------------------------------------------------
- DEMOTING 18 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 18 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 18
-proc pid = 19, priority 3, ticks = 1
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 2
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 3
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 4
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 5
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 6
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 7
-END OF LINE 19
-proc pid = 19, priority 3, ticks = 8
-END OF LINE 19
----------------------------------------------------
- DEMOTING 19 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 19 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 19
-proc pid = 20, priority 3, ticks = 1
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 2
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 3
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 4
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 5
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 6
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 7
-END OF LINE 20
-proc pid = 20, priority 3, ticks = 8
-END OF LINE 20
----------------------------------------------------
- DEMOTING 20 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 20 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 20
-proc pid = 21, priority 3, ticks = 1
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 2
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 3
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 4
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 5
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 6
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 7
-END OF LINE 21
-proc pid = 21, priority 3, ticks = 8
-END OF LINE 21
----------------------------------------------------
- DEMOTING 21 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 21 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 21
-proc pid = 22, priority 3, ticks = 1
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 2
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 3
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 4
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 5
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 6
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 7
-END OF LINE 22
-proc pid = 22, priority 3, ticks = 8
-END OF LINE 22
----------------------------------------------------
- DEMOTING 22 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 22 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 22
-END OF LINE 22
-proc pid = 23, priority 3, ticks = 1
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 2
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 3
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 4
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 5
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 6
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 7
-END OF LINE 23
-proc pid = 23, priority 3, ticks = 8
-END OF LINE 23
----------------------------------------------------
- DEMOTING 23 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 23 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 23
-END OF LINE 23
-proc pid = 24, priority 3, ticks = 1
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 2
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 3
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 4
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 5
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 6
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 7
-END OF LINE 24
-proc pid = 24, priority 3, ticks = 8
-END OF LINE 24
----------------------------------------------------
- DEMOTING 24 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 24 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 24
-END OF LINE 24
-proc pid = 25, priority 3, ticks = 1
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 2
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 3
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 4
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 5
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 6
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 7
-END OF LINE 25
-proc pid = 25, priority 3, ticks = 8
-END OF LINE 25
----------------------------------------------------
- DEMOTING 25 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 25 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 25 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 25
-END OF LINE 25
-proc pid = 26, priority 3, ticks = 1
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 2
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 3
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 4
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 5
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 6
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 7
-END OF LINE 26
-proc pid = 26, priority 3, ticks = 8
-END OF LINE 26
----------------------------------------------------
- DEMOTING 26 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 26 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 26 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 26
-END OF LINE 26
-proc pid = 27, priority 3, ticks = 1
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 2
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 3
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 4
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 5
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 6
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 7
-END OF LINE 27
-proc pid = 27, priority 3, ticks = 8
-END OF LINE 27
----------------------------------------------------
- DEMOTING 27 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 27 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 27
-END OF LINE 27
-END OF LINE 27
-proc pid = 28, priority 3, ticks = 1
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 2
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 3
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 4
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 5
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 6
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 7
-END OF LINE 28
-proc pid = 28, priority 3, ticks = 8
-END OF LINE 28
----------------------------------------------------
- DEMOTING 28 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 28 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 28
-END OF LINE 28
-END OF LINE 28
-proc pid = 29, priority 3, ticks = 1
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 2
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 3
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 4
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 5
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 6
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 7
-END OF LINE 29
-proc pid = 29, priority 3, ticks = 8
-END OF LINE 29
----------------------------------------------------
- DEMOTING 29 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 29 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 29 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 29
-END OF LINE 29
-END OF LINE 29
-proc pid = 30, priority 3, ticks = 1
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 2
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 3
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 4
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 5
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 6
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 7
-END OF LINE 30
-proc pid = 30, priority 3, ticks = 8
-END OF LINE 30
----------------------------------------------------
- DEMOTING 30 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 30 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 30 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 30
-END OF LINE 30
-END OF LINE 30
-proc pid = 31, priority 3, ticks = 1
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 2
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 3
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 4
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 5
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 6
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 7
-END OF LINE 31
-proc pid = 31, priority 3, ticks = 8
-END OF LINE 31
----------------------------------------------------
- DEMOTING 31 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 31 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 31 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 31
-END OF LINE 31
-END OF LINE 31
-proc pid = 32, priority 3, ticks = 1
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 2
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 3
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 4
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 5
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 6
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 7
-END OF LINE 32
-proc pid = 32, priority 3, ticks = 8
-END OF LINE 32
----------------------------------------------------
- DEMOTING 32 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 32 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 32
-END OF LINE 32
-END OF LINE 32
-END OF LINE 32
-proc pid = 33, priority 3, ticks = 1
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 2
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 3
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 4
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 5
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 6
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 7
-END OF LINE 33
-proc pid = 33, priority 3, ticks = 8
-END OF LINE 33
----------------------------------------------------
- DEMOTING 33 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 33 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 33 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 33
-END OF LINE 33
-END OF LINE 33
-proc pid = 34, priority 3, ticks = 1
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 2
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 3
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 4
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 5
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 6
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 7
-END OF LINE 34
-proc pid = 34, priority 3, ticks = 8
-END OF LINE 34
----------------------------------------------------
- DEMOTING 34 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 34 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 34 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 34
-END OF LINE 34
-END OF LINE 34
-END OF LINE 34
-proc pid = 35, priority 3, ticks = 1
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 2
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 3
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 4
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 5
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 6
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 7
-END OF LINE 35
-proc pid = 35, priority 3, ticks = 8
-END OF LINE 35
----------------------------------------------------
- DEMOTING 35 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 35 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 35 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 35
-END OF LINE 35
-END OF LINE 35
-END OF LINE 35
-proc pid = 36, priority 3, ticks = 1
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 2
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 3
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 4
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 5
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 6
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 7
-END OF LINE 36
-proc pid = 36, priority 3, ticks = 8
-END OF LINE 36
----------------------------------------------------
- DEMOTING 36 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 36 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 36
-END OF LINE 36
-END OF LINE 36
-END OF LINE 36
-END OF LINE 36
-proc pid = 37, priority 3, ticks = 1
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 2
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 3
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 4
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 5
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 6
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 7
-END OF LINE 37
-proc pid = 37, priority 3, ticks = 8
-END OF LINE 37
----------------------------------------------------
- DEMOTING 37 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 37 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 37 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 37
-END OF LINE 37
-END OF LINE 37
-END OF LINE 37
-END OF LINE 37
-proc pid = 38, priority 3, ticks = 1
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 2
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 3
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 4
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 5
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 6
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 7
-END OF LINE 38
-proc pid = 38, priority 3, ticks = 8
-END OF LINE 38
----------------------------------------------------
- DEMOTING 38 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 38 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 38 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 38
-END OF LINE 38
-END OF LINE 38
-END OF LINE 38
-END OF LINE 38
-proc pid = 39, priority 3, ticks = 1
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 2
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 3
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 4
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 5
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 6
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 7
-END OF LINE 39
-proc pid = 39, priority 3, ticks = 8
-END OF LINE 39
----------------------------------------------------
- DEMOTING 39 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 39 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 39 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 39
-END OF LINE 39
-END OF LINE 39
-END OF LINE 39
-END OF LINE 39
-proc pid = 40, priority 3, ticks = 1
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 2
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 3
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 4
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 5
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 6
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 7
-END OF LINE 40
-proc pid = 40, priority 3, ticks = 8
-END OF LINE 40
----------------------------------------------------
- DEMOTING 40 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 40 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 40 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 40
-END OF LINE 40
-END OF LINE 40
-END OF LINE 40
-END OF LINE 40
-proc pid = 41, priority 3, ticks = 1
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 2
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 3
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 4
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 5
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 6
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 7
-END OF LINE 41
-proc pid = 41, priority 3, ticks = 8
-END OF LINE 41
----------------------------------------------------
- DEMOTING 41 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 41 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 41
-END OF LINE 41
-END OF LINE 41
-END OF LINE 41
-END OF LINE 41
-END OF LINE 41
-proc pid = 42, priority 3, ticks = 1
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 2
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 3
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 4
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 5
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 6
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 7
-END OF LINE 42
-proc pid = 42, priority 3, ticks = 8
-END OF LINE 42
----------------------------------------------------
- DEMOTING 42 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 42 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 42
-END OF LINE 42
-END OF LINE 42
-END OF LINE 42
-END OF LINE 42
-END OF LINE 42
-proc pid = 43, priority 3, ticks = 1
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 2
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 3
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 4
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 5
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 6
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 7
-END OF LINE 43
-proc pid = 43, priority 3, ticks = 8
-END OF LINE 43
----------------------------------------------------
- DEMOTING 43 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 43 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 43
-END OF LINE 43
-END OF LINE 43
-END OF LINE 43
-END OF LINE 43
-END OF LINE 43
-proc pid = 44, priority 3, ticks = 1
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 2
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 3
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 4
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 5
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 6
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 7
-END OF LINE 44
-proc pid = 44, priority 3, ticks = 8
-END OF LINE 44
----------------------------------------------------
- DEMOTING 44 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 44 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 44 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 44
-END OF LINE 44
-END OF LINE 44
-END OF LINE 44
-END OF LINE 44
-END OF LINE 44
-proc pid = 45, priority 3, ticks = 1
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 2
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 3
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 4
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 5
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 6
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 7
-END OF LINE 45
-proc pid = 45, priority 3, ticks = 8
-END OF LINE 45
----------------------------------------------------
- DEMOTING 45 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 45 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 45 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 45
-END OF LINE 45
-END OF LINE 45
-END OF LINE 45
-END OF LINE 45
-END OF LINE 45
-proc pid = 46, priority 3, ticks = 1
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 2
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 3
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 4
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 5
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 6
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 7
-END OF LINE 46
-proc pid = 46, priority 3, ticks = 8
-END OF LINE 46
----------------------------------------------------
- DEMOTING 46 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 46 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 46 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 46
-END OF LINE 46
-END OF LINE 46
-END OF LINE 46
-END OF LINE 46
-END OF LINE 46
-proc pid = 47, priority 3, ticks = 1
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 2
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 3
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 4
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 5
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 6
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 7
-END OF LINE 47
-proc pid = 47, priority 3, ticks = 8
-END OF LINE 47
----------------------------------------------------
- DEMOTING 47 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 47 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 47 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 47
-END OF LINE 47
-END OF LINE 47
-END OF LINE 47
-END OF LINE 47
-END OF LINE 47
-END OF LINE 47
-proc pid = 48, priority 3, ticks = 1
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 2
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 3
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 4
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 5
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 6
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 7
-END OF LINE 48
-proc pid = 48, priority 3, ticks = 8
-END OF LINE 48
----------------------------------------------------
- DEMOTING 48 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 48 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 48
-END OF LINE 48
-END OF LINE 48
-END OF LINE 48
-END OF LINE 48
-END OF LINE 48
-END OF LINE 48
-proc pid = 49, priority 3, ticks = 1
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 2
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 3
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 4
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 5
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 6
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 7
-END OF LINE 49
-proc pid = 49, priority 3, ticks = 8
-END OF LINE 49
----------------------------------------------------
- DEMOTING 49 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 49 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 49 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 49
-END OF LINE 49
-END OF LINE 49
-END OF LINE 49
-END OF LINE 49
-END OF LINE 49
-END OF LINE 49
-proc pid = 50, priority 3, ticks = 1
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 2
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 3
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 4
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 5
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 6
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 7
-END OF LINE 50
-proc pid = 50, priority 3, ticks = 8
-END OF LINE 50
----------------------------------------------------
- DEMOTING 50 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 50 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 50 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 50
-END OF LINE 50
-END OF LINE 50
-END OF LINE 50
-END OF LINE 50
-END OF LINE 50
-END OF LINE 50
-END OF LINE 50
----------------------------------------------------
- DEMOTING 50 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 50 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 51 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 51 -- 
----------------------------------------------------
-proc pid = 51, priority 3, ticks = 1
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 2
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 3
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 4
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 5
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 6
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 7
-END OF LINE 51
-proc pid = 51, priority 3, ticks = 8
-END OF LINE 51
----------------------------------------------------
- DEMOTING 51 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 51 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 51 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 51
-END OF LINE 51
-END OF LINE 51
-END OF LINE 51
-END OF LINE 51
-END OF LINE 51
-END OF LINE 51
-END OF LINE 51
----------------------------------------------------
- DEMOTING 51 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 51 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 52 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 52 -- 
----------------------------------------------------
-proc pid = 52, priority 3, ticks = 1
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 2
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 3
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 4
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 5
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 6
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 7
-END OF LINE 52
-proc pid = 52, priority 3, ticks = 8
-END OF LINE 52
----------------------------------------------------
- DEMOTING 52 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 52 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 52 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 52
-END OF LINE 52
-END OF LINE 52
-END OF LINE 52
-END OF LINE 52
-END OF LINE 52
-END OF LINE 52
-END OF LINE 52
----------------------------------------------------
- DEMOTING 52 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 52 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-50 -- 51 -- 52 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 53, priority 3, ticks = 1
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 2
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 3
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 4
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 5
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 6
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 7
-END OF LINE 53
-proc pid = 53, priority 3, ticks = 8
-END OF LINE 53
----------------------------------------------------
- DEMOTING 53 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 53 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 53 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 53
-END OF LINE 53
-END OF LINE 53
-END OF LINE 53
-END OF LINE 53
-END OF LINE 53
-END OF LINE 53
-END OF LINE 53
----------------------------------------------------
- DEMOTING 53 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 53 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-52 -- 50 -- 51 -- 53 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 54, priority 3, ticks = 1
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 2
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 3
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 4
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 5
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 6
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 7
-END OF LINE 54
-proc pid = 54, priority 3, ticks = 8
-END OF LINE 54
----------------------------------------------------
- DEMOTING 54 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 54 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 54 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 54
-END OF LINE 54
-END OF LINE 54
-END OF LINE 54
-END OF LINE 54
-END OF LINE 54
-END OF LINE 54
-END OF LINE 54
----------------------------------------------------
- DEMOTING 54 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 54 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-53 -- 52 -- 50 -- 51 -- 54 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 55, priority 3, ticks = 1
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 2
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 3
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 4
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 5
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 6
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 7
-END OF LINE 55
-proc pid = 55, priority 3, ticks = 8
-END OF LINE 55
----------------------------------------------------
- DEMOTING 55 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 55 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 55 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 55
-END OF LINE 55
-END OF LINE 55
-END OF LINE 55
-END OF LINE 55
-END OF LINE 55
-END OF LINE 55
-END OF LINE 55
----------------------------------------------------
- DEMOTING 55 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 55 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-54 -- 53 -- 52 -- 50 -- 51 -- 55 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 56, priority 3, ticks = 1
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 2
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 3
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 4
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 5
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 6
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 7
-END OF LINE 56
-proc pid = 56, priority 3, ticks = 8
-END OF LINE 56
----------------------------------------------------
- DEMOTING 56 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 56 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 56 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 56
-END OF LINE 56
-END OF LINE 56
-END OF LINE 56
-END OF LINE 56
-END OF LINE 56
-END OF LINE 56
-END OF LINE 56
----------------------------------------------------
- DEMOTING 56 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 56 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 56 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 57, priority 3, ticks = 1
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 2
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 3
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 4
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 5
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 6
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 7
-END OF LINE 57
-proc pid = 57, priority 3, ticks = 8
-END OF LINE 57
----------------------------------------------------
- DEMOTING 57 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 57 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 57 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 57
-END OF LINE 57
-END OF LINE 57
-END OF LINE 57
-END OF LINE 57
-END OF LINE 57
-END OF LINE 57
-END OF LINE 57
----------------------------------------------------
- DEMOTING 57 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 57 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 57 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 58, priority 3, ticks = 1
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 2
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 3
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 4
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 5
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 6
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 7
-END OF LINE 58
-proc pid = 58, priority 3, ticks = 8
-END OF LINE 58
----------------------------------------------------
- DEMOTING 58 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 58 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 58 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 58
-END OF LINE 58
-END OF LINE 58
-END OF LINE 58
-END OF LINE 58
-END OF LINE 58
-END OF LINE 58
-END OF LINE 58
----------------------------------------------------
- DEMOTING 58 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 58 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 58 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-proc pid = 59, priority 3, ticks = 1
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 2
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 3
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 4
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 5
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 6
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 7
-END OF LINE 59
-proc pid = 59, priority 3, ticks = 8
-END OF LINE 59
----------------------------------------------------
- DEMOTING 59 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 59 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 59 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 59
-END OF LINE 59
-END OF LINE 59
-END OF LINE 59
-END OF LINE 59
-END OF LINE 59
-END OF LINE 59
-END OF LINE 59
----------------------------------------------------
- DEMOTING 59 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 59 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 59
-proc pid = 60, priority 3, ticks = 1
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 2
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 3
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 4
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 5
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 6
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 7
-END OF LINE 60
-proc pid = 60, priority 3, ticks = 8
-END OF LINE 60
----------------------------------------------------
- DEMOTING 60 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 60 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 60 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 60
-END OF LINE 60
-END OF LINE 60
-END OF LINE 60
-END OF LINE 60
-END OF LINE 60
-END OF LINE 60
-END OF LINE 60
----------------------------------------------------
- DEMOTING 60 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 60 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 60
-proc pid = 61, priority 3, ticks = 1
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 2
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 3
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 4
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 5
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 6
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 7
-END OF LINE 61
-proc pid = 61, priority 3, ticks = 8
-END OF LINE 61
----------------------------------------------------
- DEMOTING 61 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 61 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 61 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 61
-END OF LINE 61
-END OF LINE 61
-END OF LINE 61
-END OF LINE 61
-END OF LINE 61
-END OF LINE 61
-END OF LINE 61
----------------------------------------------------
- DEMOTING 61 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 61 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 61 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 61
-proc pid = 62, priority 3, ticks = 1
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 2
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 3
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 4
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 5
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 6
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 7
-END OF LINE 62
-proc pid = 62, priority 3, ticks = 8
-END OF LINE 62
----------------------------------------------------
- DEMOTING 62 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 62 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 62 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 62
-END OF LINE 62
-END OF LINE 62
-END OF LINE 62
-END OF LINE 62
-END OF LINE 62
-END OF LINE 62
-END OF LINE 62
----------------------------------------------------
- DEMOTING 62 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 62 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 62 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 62
-proc pid = 63, priority 3, ticks = 1
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 2
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 3
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 4
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 5
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 6
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 7
-END OF LINE 63
-proc pid = 63, priority 3, ticks = 8
-END OF LINE 63
----------------------------------------------------
- DEMOTING 63 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 63 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 63 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 63
-END OF LINE 63
-END OF LINE 63
-END OF LINE 63
-END OF LINE 63
-END OF LINE 63
-END OF LINE 63
-END OF LINE 63
----------------------------------------------------
- DEMOTING 63 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 63 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 63 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 63
-proc pid = 64, priority 3, ticks = 1
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 2
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 3
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 4
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 5
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 6
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 7
-END OF LINE 64
-proc pid = 64, priority 3, ticks = 8
-END OF LINE 64
----------------------------------------------------
- DEMOTING 64 with priority = 3, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-63 -- 62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 64 -- 
-NEW PRIORITY = 2
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-63 -- 62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 64 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
----------------------------------------------------
- DEMOTING 64 with priority = 2, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-63 -- 62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 64 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 1
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-63 -- 62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 64 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
-END OF LINE 64
----------------------------------------------------
- DEMOTING 64 with priority = 1, ticks = 8
-************ QUEUE 0
-1 -- 
-************ QUEUE 1
-63 -- 62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 64 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
-NEW PRIORITY = 0
-~           ~             ~            ~
-************ QUEUE 0
-1 -- 64 -- 
-************ QUEUE 1
-63 -- 62 -- 61 -- 58 -- 57 -- 56 -- 55 -- 54 -- 53 -- 52 -- 50 -- 51 -- 59 -- 60 -- 
-************ QUEUE 2
-49 -- 47 -- 46 -- 45 -- 44 -- 40 -- 39 -- 38 -- 37 -- 35 -- 34 -- 33 -- 31 -- 30 -- 29 -- 26 -- 25 -- 3 -- 2 -- 16 -- 17 -- 18 -- 19 -- 20 -- 21 -- 22 -- 23 -- 24 -- 27 -- 28 -- 32 -- 36 -- 41 -- 42 -- 43 -- 48 -- 
-************ QUEUE 3
-15 -- 14 -- 13 -- 12 -- 11 -- 10 -- 9 -- 8 -- 7 -- 6 -- 5 -- 4 -- 
----------------------------------------------------
 pid: 1
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 2717
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 2
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 11852
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 3
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3836
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 4
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3835
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 5
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3833
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 6
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3831
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 7
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3828
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 8
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3825
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 9
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3821
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 10
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3817
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 11
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3813
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 12
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3808
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 13
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3803
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 14
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3798
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 15
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3792
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 16
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3785
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 17
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3779
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 18
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3772
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 19
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3604
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 20
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3596
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 21
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3588
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 22
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3579
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 23
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3570
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 24
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3560
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 25
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3550
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 26
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3540
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 27
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3529
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 28
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3517
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 29
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3506
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 30
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3494
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 31
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3481
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 32
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3468
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 33
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3455
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 34
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3441
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 35
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3427
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 36
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3413
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 37
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3398
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 38
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3383
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 39
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3367
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 40
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3351
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 41
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3335
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 42
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3318
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 43
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3300
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 44
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3283
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 45
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3264
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 46
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3246
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 47
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3227
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 48
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3207
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 49
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3187
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 50
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3167
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 51
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3146
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 52
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3125
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 53
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3104
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 54
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3082
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 55
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3059
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 56
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3036
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 57
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 3013
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 58
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 2669
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 59
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 2645
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
@@ -6676,17 +1229,17 @@ pid: 60
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 61
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 2596
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 62
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 2570
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 63
-	 level 3 wait ticks used 0
+	 level 3 wait ticks used 2544
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
@@ -6694,7 +1247,7 @@ pid: 64
 	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
-	 level 0 wait ticks used 0
+	 level 0 wait ticks used 29
 TEST PASSED
 
 
@@ -6712,12 +1265,12 @@ test inuse_basic PASSED (1 of 1)
 test getprocinfo PASSED (1 of 1)
  (Basic test on getprocinfo)
 
-test single_job_long PASSED (1 of 1)
+test single_job_long FAILED (0 of 1)
  (Test on a long running workload)
-
-test boostproc FAILED (0 of 1)
- (Basic test on boostproc)
  tester failed
+
+test boostproc PASSED (1 of 1)
+ (Basic test on boostproc)
 
 test new_process PASSED (1 of 1)
  (New process should have higher priority)
@@ -6728,13 +1281,12 @@ test round_robin PASSED (1 of 1)
 test relinquish PASSED (1 of 1)
  (Processes relinquished CPU resources should maintain their time slices)
 
-test priority_boost FAILED (0 of 1)
+test priority_boost PASSED (1 of 1)
  ((stronger) test on boostproc)
- tester failed
 
 test wait_times PASSED (1 of 1)
  (Wait time should not exceed the expected ticks)
 
-Passed 8 of 10 tests.
-Overall 8 of 10
-Points 7 of 9
+Passed 9 of 10 tests.
+Overall 9 of 10
+Points 8 of 9

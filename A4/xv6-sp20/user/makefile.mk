@@ -19,7 +19,10 @@ USER_PROGS := \
 	zombie\
 	test\
 	getprocinfo\
-	single_job_long
+	single_job_long\
+	priority_boost\
+	boostproc\
+	wait_times
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
