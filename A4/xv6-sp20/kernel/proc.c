@@ -339,8 +339,7 @@ void scheduler(void)
       proc = 0;
     }
 
-    p->ticks[p->priority] = p->ticks[p->priority] + 1;
-
+    p->ticks[p->priority]++;
     int mod_slice, mod_RR_slice;
 
     p->wait_ticks[p->priority] = 0;
@@ -348,13 +347,6 @@ void scheduler(void)
     {
       mod_slice = (p->ticks[p->priority]) % timeslice[p->priority];
       mod_RR_slice = (p->ticks[p->priority]) % timeslice_RR[p->priority];
-      if (queues[p->priority].num_procs > 1 && p->priority > 0)
-      {
-        if (mod_RR_slice == 0)
-        {
-          moveToEnd(p, p->priority);
-        }
-      }
 
       if (mod_slice == 0)
       {
@@ -362,6 +354,13 @@ void scheduler(void)
         removeProcess(p->pid, p->priority);
         p->priority = p->priority - 1;
         addProcess(p, p->priority);
+      }
+      else if (queues[p->priority].num_procs > 1 && p->priority > 0)
+      {
+        if (mod_RR_slice == 0)
+        {
+          moveToEnd(p, p->priority);
+        }
       }
     }
 
@@ -374,7 +373,7 @@ void scheduler(void)
       for (j = 0; j < queues[i].num_procs; j++)
       {
         curr_proc = queues[i].procs[j];
-        if (curr_proc->pid != justRan)
+        if (curr_proc->pid != justRan && curr_proc->state == RUNNABLE)
         {
           curr_proc->wait_ticks[i]++;
           if (curr_proc->wait_ticks[i] >= starve_time[i])
@@ -457,8 +456,6 @@ int cleanupQueue(int pq_num)
     else
       queues[pq_num].procs[i] = 0;
   }
-  // cprintf("num of procs %d\n", queues[pq_num].num_procs);
-  // printQueues();
 
   return 0;
 }

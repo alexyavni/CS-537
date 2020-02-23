@@ -8,25 +8,7 @@ build xv6 using make
 **********************************************************************
 Trying to build project using make
 make
-gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
-	-M -MG kernel/proc.c -MF kernel/proc.d -MT kernel/proc.d -MT kernel/proc.o
-gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o kernel/proc.o kernel/proc.c
-ld  -m    elf_i386 -nostdlib --omagic \
-	--section-start=.text=0x100000 --entry=main --output=kernel/kernel \
-	kernel/multiboot.o kernel/data.o kernel/bio.o kernel/console.o kernel/exec.o kernel/file.o kernel/fs.o kernel/ide.o kernel/ioapic.o kernel/kalloc.o kernel/kbd.o kernel/lapic.o kernel/main.o kernel/mp.o kernel/picirq.o kernel/pipe.o kernel/proc.o kernel/spinlock.o kernel/string.o kernel/swtch.o kernel/syscall.o kernel/sysfile.o kernel/sysproc.o kernel/timer.o kernel/trapasm.o kernel/trap.o kernel/uart.o kernel/vectors.o kernel/vm.o \
-	-b binary initcode bootother
-dd if=/dev/zero of=xv6.img count=10000
-10000+0 records in
-10000+0 records out
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.0218974 s, 234 MB/s
-dd if=kernel/bootblock of=xv6.img conv=notrunc
-1+0 records in
-1+0 records out
-512 bytes copied, 0.000118795 s, 4.3 MB/s
-dd if=kernel/kernel of=xv6.img seek=1 conv=notrunc
-269+1 records in
-269+1 records out
-138140 bytes (138 kB, 135 KiB) copied, 0.000563953 s, 245 MB/s
+make: Nothing to be done for 'all'.
 
 
 test build PASSED
@@ -73,7 +55,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 542 blocks have been allocated
+test2
+balloc: first 563 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -136,7 +119,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 542 blocks have been allocated
+test2
+balloc: first 563 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -160,12 +144,12 @@ pid: 1 priority: 0
 	 level 2 ticks waited for 0
 	 level 1 ticks used 32
 	 level 1 ticks waited for 0
-	 level 0 ticks used 11911
-	 level 0 ticks waited for 2
-pid: 2 priority: 3
- 	 level 3 ticks used 9
-	 level 3 ticks waited for 23
-	 level 2 ticks used 10
+	 level 0 ticks used 11804
+	 level 0 ticks waited for 0
+pid: 2 priority: 2
+ 	 level 3 ticks used 8
+	 level 3 ticks waited for 0
+	 level 2 ticks used 11
 	 level 2 ticks waited for 0
 	 level 1 ticks used 0
 	 level 1 ticks waited for 0
@@ -226,7 +210,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 545 blocks have been allocated
+test2
+balloc: first 566 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -247,23 +232,21 @@ pid: 1
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 19610
+	 level 0 ticks used 19654
 pid: 2
-	 level 3 ticks used 10
-	 level 2 ticks used 10
+	 level 3 ticks used 8
+	 level 2 ticks used 11
 	 level 1 ticks used 0
 	 level 0 ticks used 0
 pid: 3
-	 level 3 ticks used 24
+	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 27
-user/tester.c:37 check (st.ticks[i][3] == 8) failed: current process should run for 8 ticks in level 3
-$ 
+	 level 0 ticks used 44
+TEST PASSED
 
-test single_job_long FAILED (0 of 1)
+test single_job_long PASSED (1 of 1)
  (Test on a long running workload)
- tester failed
 
 starting boostproc
 
@@ -306,7 +289,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 543 blocks have been allocated
+test2
+balloc: first 564 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -324,10 +308,10 @@ init: starting sh
 $ tester
 tester
 pid: 3 priority: 1
- 	 level 3 ticks used 24
+ 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 26
+	 level 0 ticks used 43
 TEST PASSED
 
 test boostproc PASSED (1 of 1)
@@ -374,7 +358,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 543 blocks have been allocated
+test2
+balloc: first 564 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -392,10 +377,10 @@ init: starting sh
 $ tester
 tester
 pid: 3 priority: 0
- 	 level 3 ticks used 24
+ 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 28
+	 level 0 ticks used 45
 pid: 4 priority: 3
  	 level 3 ticks used 0
 	 level 2 ticks used 0
@@ -447,7 +432,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 544 blocks have been allocated
+test2
+balloc: first 565 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -471,8 +457,8 @@ pid: 4
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
-	 level 0 waited for ticks 75
+	 level 0 ticks used 0
+	 level 0 waited for ticks 12
 pid: 5
 	 level 3 ticks used 8
 	 level 3 waited for ticks 0
@@ -480,8 +466,8 @@ pid: 5
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
-	 level 0 waited for ticks 50
+	 level 0 ticks used 0
+	 level 0 waited for ticks 8
 pid: 6
 	 level 3 ticks used 8
 	 level 3 waited for ticks 0
@@ -489,8 +475,8 @@ pid: 6
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
-	 level 0 waited for ticks 25
+	 level 0 ticks used 0
+	 level 0 waited for ticks 4
 pid: 7
 	 level 3 ticks used 8
 	 level 3 waited for ticks 0
@@ -498,20 +484,20 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
+	 level 0 ticks used 0
 	 level 0 waited for ticks 0
 pid: 4
 	 level 3 ticks used 8
-	 level 3 waited for ticks 36169
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
+	 level 0 ticks used 26
 	 level 0 waited for ticks 0
 pid: 5
 	 level 3 ticks used 8
-	 level 3 waited for ticks 36144
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
@@ -520,7 +506,7 @@ pid: 5
 	 level 0 waited for ticks 0
 pid: 6
 	 level 3 ticks used 8
-	 level 3 waited for ticks 36119
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
@@ -534,20 +520,20 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 37136
+	 level 0 ticks used 793
 	 level 0 waited for ticks 0
 pid: 4
 	 level 3 ticks used 8
-	 level 3 waited for ticks 73424
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
+	 level 0 ticks used 26
 	 level 0 waited for ticks 0
 pid: 5
 	 level 3 ticks used 8
-	 level 3 waited for ticks 73399
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
@@ -556,7 +542,7 @@ pid: 5
 	 level 0 waited for ticks 0
 pid: 6
 	 level 3 ticks used 8
-	 level 3 waited for ticks 73374
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
@@ -570,20 +556,20 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 74288
+	 level 0 ticks used 37748
 	 level 0 waited for ticks 0
 pid: 4
 	 level 3 ticks used 8
-	 level 3 waited for ticks 110306
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 25
+	 level 0 ticks used 26
 	 level 0 waited for ticks 0
 pid: 5
 	 level 3 ticks used 8
-	 level 3 waited for ticks 110281
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
@@ -592,7 +578,7 @@ pid: 5
 	 level 0 waited for ticks 0
 pid: 6
 	 level 3 ticks used 8
-	 level 3 waited for ticks 110256
+	 level 3 waited for ticks 0
 	 level 2 ticks used 16
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
@@ -606,7 +592,7 @@ pid: 7
 	 level 2 waited for ticks 0
 	 level 1 ticks used 32
 	 level 1 waited for ticks 0
-	 level 0 ticks used 111067
+	 level 0 ticks used 74776
 	 level 0 waited for ticks 0
 TEST PASSED
 
@@ -654,7 +640,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 544 blocks have been allocated
+test2
+balloc: first 565 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -685,17 +672,17 @@ pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 266
+	 level 0 ticks used 275
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 105
+	 level 0 ticks used 110
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 2614
+	 level 0 ticks used 2471
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
@@ -705,92 +692,92 @@ pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 4685
+	 level 0 ticks used 4359
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 5157
+	 level 0 ticks used 4990
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 6789
+	 level 0 ticks used 6222
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 7678
+	 level 0 ticks used 7323
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 8878
+	 level 0 ticks used 8192
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 10217
+	 level 0 ticks used 9788
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 10959
+	 level 0 ticks used 10188
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 12743
+	 level 0 ticks used 12272
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 13053
+	 level 0 ticks used 12173
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 15263
+	 level 0 ticks used 14751
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 15148
+	 level 0 ticks used 14159
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 17764
+	 level 0 ticks used 17267
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 17254
+	 level 0 ticks used 16153
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 20293
+	 level 0 ticks used 19779
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 19328
+	 level 0 ticks used 18036
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 22814
+	 level 0 ticks used 22173
 pid: 4
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 21394
+	 level 0 ticks used 19945
 pid: 5
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 25326
+	 level 0 ticks used 24665
 TEST PASSED
 
 test relinquish PASSED (1 of 1)
@@ -837,7 +824,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 544 blocks have been allocated
+test2
+balloc: first 565 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -857,14 +845,14 @@ tester
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 32
-	 level 0 ticks used 117
+	 level 0 ticks used 118
 	 The priority of the parent process is 1
 After priority gets updated and scheduled for some time
 pid: 3
 	 level 3 ticks used 8
 	 level 2 ticks used 16
 	 level 1 ticks used 64
-	 level 0 ticks used 379
+	 level 0 ticks used 118
 TEST PASSED
 
 test priority_boost PASSED (1 of 1)
@@ -911,7 +899,8 @@ README
 wait_times
 stressfs
 single_job_long
-balloc: first 543 blocks have been allocated
+test2
+balloc: first 564 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -929,297 +918,297 @@ init: starting sh
 $ tester
 tester
 pid: 1
-	 level 3 wait ticks used 2717
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 2
-	 level 3 wait ticks used 11852
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 3
-	 level 3 wait ticks used 3836
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 4
-	 level 3 wait ticks used 3835
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 5
-	 level 3 wait ticks used 3833
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 6
-	 level 3 wait ticks used 3831
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 7
-	 level 3 wait ticks used 3828
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 8
-	 level 3 wait ticks used 3825
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 9
-	 level 3 wait ticks used 3821
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 10
-	 level 3 wait ticks used 3817
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 11
-	 level 3 wait ticks used 3813
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 12
-	 level 3 wait ticks used 3808
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 13
-	 level 3 wait ticks used 3803
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 14
-	 level 3 wait ticks used 3798
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 15
-	 level 3 wait ticks used 3792
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 16
-	 level 3 wait ticks used 3785
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 17
-	 level 3 wait ticks used 3779
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 18
-	 level 3 wait ticks used 3772
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 19
-	 level 3 wait ticks used 3604
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 20
-	 level 3 wait ticks used 3596
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 21
-	 level 3 wait ticks used 3588
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 22
-	 level 3 wait ticks used 3579
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 23
-	 level 3 wait ticks used 3570
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 24
-	 level 3 wait ticks used 3560
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 25
-	 level 3 wait ticks used 3550
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 26
-	 level 3 wait ticks used 3540
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 27
-	 level 3 wait ticks used 3529
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 28
-	 level 3 wait ticks used 3517
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 29
-	 level 3 wait ticks used 3506
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 30
-	 level 3 wait ticks used 3494
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 31
-	 level 3 wait ticks used 3481
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 32
-	 level 3 wait ticks used 3468
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 33
-	 level 3 wait ticks used 3455
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 34
-	 level 3 wait ticks used 3441
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 35
-	 level 3 wait ticks used 3427
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 36
-	 level 3 wait ticks used 3413
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 37
-	 level 3 wait ticks used 3398
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 38
-	 level 3 wait ticks used 3383
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 39
-	 level 3 wait ticks used 3367
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 40
-	 level 3 wait ticks used 3351
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 41
-	 level 3 wait ticks used 3335
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 42
-	 level 3 wait ticks used 3318
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 43
-	 level 3 wait ticks used 3300
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 44
-	 level 3 wait ticks used 3283
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 45
-	 level 3 wait ticks used 3264
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 46
-	 level 3 wait ticks used 3246
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 47
-	 level 3 wait ticks used 3227
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 48
-	 level 3 wait ticks used 3207
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 49
-	 level 3 wait ticks used 3187
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 50
-	 level 3 wait ticks used 3167
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 51
-	 level 3 wait ticks used 3146
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 52
-	 level 3 wait ticks used 3125
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 53
-	 level 3 wait ticks used 3104
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 54
-	 level 3 wait ticks used 3082
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 55
-	 level 3 wait ticks used 3059
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 56
-	 level 3 wait ticks used 3036
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 57
-	 level 3 wait ticks used 3013
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 58
-	 level 3 wait ticks used 2669
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 59
-	 level 3 wait ticks used 2645
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
@@ -1229,17 +1218,17 @@ pid: 60
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 61
-	 level 3 wait ticks used 2596
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 62
-	 level 3 wait ticks used 2570
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
 pid: 63
-	 level 3 wait ticks used 2544
+	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
 	 level 0 wait ticks used 0
@@ -1247,7 +1236,7 @@ pid: 64
 	 level 3 wait ticks used 0
 	 level 2 wait ticks used 0
 	 level 1 wait ticks used 0
-	 level 0 wait ticks used 29
+	 level 0 wait ticks used 0
 TEST PASSED
 
 
@@ -1265,9 +1254,8 @@ test inuse_basic PASSED (1 of 1)
 test getprocinfo PASSED (1 of 1)
  (Basic test on getprocinfo)
 
-test single_job_long FAILED (0 of 1)
+test single_job_long PASSED (1 of 1)
  (Test on a long running workload)
- tester failed
 
 test boostproc PASSED (1 of 1)
  (Basic test on boostproc)
@@ -1287,6 +1275,6 @@ test priority_boost PASSED (1 of 1)
 test wait_times PASSED (1 of 1)
  (Wait time should not exceed the expected ticks)
 
-Passed 9 of 10 tests.
-Overall 9 of 10
-Points 8 of 9
+Passed 10 of 10 tests.
+Overall 10 of 10
+Points 9 of 9

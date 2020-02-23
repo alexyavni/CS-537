@@ -22,7 +22,8 @@ USER_PROGS := \
 	single_job_long\
 	priority_boost\
 	boostproc\
-	wait_times
+	wait_times\
+	test2
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
