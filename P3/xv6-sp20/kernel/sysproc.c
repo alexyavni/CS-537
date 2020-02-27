@@ -88,3 +88,30 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_mprotect(void)
+{
+  void * addr = 0;
+  int len = 0;
+  //TODO
+  return mprotect(addr, len);
+}
+
+int
+sys_munprotect(void)
+{
+  void * addr = 0;
+  int len = 0;
+  //TODO
+  return munprotect(addr, len);
+}
+
+int
+sys_dump_allocated(void)
+{
+  int * frames = 0;
+  int numframes = 0;
+  //TODO
+  return dump_allocated(frames, numframes);
+}

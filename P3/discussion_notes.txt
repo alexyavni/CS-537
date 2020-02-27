@@ -1,0 +1,42 @@
+Discussion 02/25/2020
+
+- All projects are 10 day chunks
+- XV6 project on memory management
+
+- 2 projects, 2 submissions
+- Due March 5
+- A little bit more work than P2B - but not double the amount of work
+- Spec quiz on canvas
+- SLIP days: blank slate - the group has 2 late days :( NOT ENOUGH
+
+Objectives:
+    1. Adding memory protections to pages using protection bits
+    2. Physical page allocation (given any virtual addr - place anywhere in mem)
+        - 2 new impl. for page allocators
+
+How does an address space look in xv6?
+
+
+walkpgdir - walks through page directory, iterates, return physical page table entry
+line 94 - most important line for project:
+    *pte = pa | perm | PTE_P;
+    - We are filling in the PTE with pa bitwiseOR permission | present_bit
+
+
+lcr3 in xv6 - don't worry about how it works
+    - Move val into CR3 reg
+
+
+Files to add sys call:
+  /*
+  *   syscall.h
+  *   defs.h
+  *   proc.c
+  *   syscall.c
+  *   sysfunc.h
+  *   sysproc.c
+  *   boostproc.c
+  *   makefile.mk
+  *   user.h
+  *   usys.S
+  */
