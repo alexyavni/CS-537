@@ -372,14 +372,48 @@ int copyout(pde_t *pgdir, uint va, void *p, uint len)
 //      len:       Num pages to be read only
 // Description:
 // should change the protection bits of the page range starting at addr and of len pages to be read only
-// Thus, the program could still read the pages in this range after mprotect() finishes, 
+// Thus, the program could still read the pages in this range after mprotect() finishes,
 // but a write to this region should cause a trap (and thus kill the process)
 int mprotect(void *addr, int len)
 {
+  // Convert addr to pgdir and eventually PTE
+  char *a, *last;
+  pte_t *pte;
 
+  // round down by factor of 4096
+  a = PGROUNDDOWN(addr);
+  // Get page directory index
+  pde_t * pgdir = (pde_t *) PDX(addr);
+  // Get physical address
+  uint pa = PADDR(addr);
+  // ??? Unsure about line below:
+  last = PGROUNDDOWN(addr + len - 1);
+
+  for (;;)
+  {
+    // create bit is 0 - do not modify
+    pte = walkpgdir(pgdir, a, 0);
+
+    // Check if address is taken
+    if (pte == 0)
+      return -1;
+
+    // if (*pte & PTE_P) ----> means PRESENT
+    // We have a pte and we want to fill it with the address, as well as permission info
+
+    // Permission should be RO - jusr USER page, without WRITE
+    int perm = PTE_U;
+    *pte = pa | perm | PTE_P;
+    
+    // Check if there are more pages
+    if (a == last)
+      break;
+
+    a += PGSIZE;
+    pa += PGSIZE;
+  }
   return 0;
 }
-
 
 // Give back read-write persmission to pages
 //      addr:      Virtual address where the pages begin
@@ -392,10 +426,11 @@ int munprotect(void *addr, int len)
 }
 
 // dump the pages which have been allocated
-//      frames: a pointer to an allocated array of integers that will be filled in by the kernel 
+//      frames: a pointer to an allocated array of integers that will be filled in by the kernel
 //              with a list of all the frame numbers that are currently allocated
 //      numframes: The previous numframes allocated frames whose information we are asking for.
-int dump_allocated(int *frames, int numframes) 
+int dump_allocated(int *frames, int numframes)
 {
+
   return 0;
 }
