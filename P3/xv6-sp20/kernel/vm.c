@@ -85,6 +85,11 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
   last = PGROUNDDOWN(la + size - 1);
   for (;;)
   {
+
+    // cprintf("a = %d \n", a);
+    // cprintf("pgdir = %d \n", pgdir);
+    // cprintf("pa = %d \n", pa);
+    // cprintf("last = %d \n", last);
     pte = walkpgdir(pgdir, a, 1);
     if (pte == 0)
       return -1;
@@ -317,8 +322,19 @@ copyuvm(pde_t *pgdir, uint sz)
     if ((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char *)pa, PGSIZE);
-    if (mappages(d, (void *)i, PGSIZE, PADDR(mem), PTE_W | PTE_U) < 0)
-      goto bad;
+    // check if parent W bit is set - check if 2 or zero after anding with W
+    // cprintf("AND with PTE_W = %x\n", ((*pte) & (PTE_W)));
+    if (((*pte) & (PTE_W)) == 2)
+    {
+      if (mappages(d, (void *)i, PGSIZE, PADDR(mem), PTE_W | PTE_U) < 0)
+        goto bad;
+    }
+    else if(((*pte) & PTE_W) == 0)
+    {
+      if (mappages(d, (void *)i, PGSIZE, PADDR(mem), PTE_U) < 0)
+        goto bad;
+    }
+    
   }
   return d;
 
@@ -382,30 +398,23 @@ int mprotect(void *addr, int len)
 
   // round down by factor of 4096
   a = PGROUNDDOWN(addr);
-  // Get page directory index
-  pde_t * pgdir = (pde_t *) PDX(addr);
-  // Get physical address
+  // Get physical address from la
   uint pa = PADDR(addr);
-  // ??? Unsure about line below:
-  last = PGROUNDDOWN(addr + len - 1);
+  // Get the adddress of the last page
+  last = PGROUNDDOWN(addr + len * PGSIZE - 1);
 
   for (;;)
   {
-    // create bit is 0 - do not modify
-    pte = walkpgdir(pgdir, a, 0);
-
-    // Check if address is taken
-    if (pte == 0)
-      return -1;
-
-    // if (*pte & PTE_P) ----> means PRESENT
-    // We have a pte and we want to fill it with the address, as well as permission info
+    // Use the proc's pgdir, the first address, and create = 0
+    pte = walkpgdir(proc->pgdir, a, 0);
 
     // Permission should be RO - jusr USER page, without WRITE
-    int perm = PTE_U;
-    *pte = pa | perm | PTE_P;
-    
-    // Check if there are more pages
+    *pte = *pte & ~PTE_W;
+
+    // munprotect: or with pte_w
+    lcr3(PADDR(proc->pgdir));
+
+    // Check if there are more pages to iterate
     if (a == last)
       break;
 
@@ -421,7 +430,35 @@ int mprotect(void *addr, int len)
 // Reverses the function of mprotect
 int munprotect(void *addr, int len)
 {
+  // Convert addr to pgdir and eventually PTE
+  char *a, *last;
+  pte_t *pte;
 
+  // round down by factor of 4096
+  a = PGROUNDDOWN(addr);
+  // Get physical address from la
+  uint pa = PADDR(addr);
+  // Get the adddress of the last page
+  last = PGROUNDDOWN(addr + len * PGSIZE - 1);
+
+  for (;;)
+  {
+    // Use the proc's pgdir, the first address, and create = 0
+    pte = walkpgdir(proc->pgdir, a, 0);
+
+    // Permission should be RO - jusr USER page, without WRITE
+    *pte = *pte | PTE_W;
+
+    // munprotect: or with pte_w
+    lcr3(PADDR(proc->pgdir));
+
+    // Check if there are more pages to iterate
+    if (a == last)
+      break;
+
+    a += PGSIZE;
+    pa += PGSIZE;
+  }
   return 0;
 }
 
