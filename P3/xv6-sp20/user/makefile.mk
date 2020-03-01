@@ -17,7 +17,8 @@ USER_PROGS := \
 	usertests\
 	wc\
 	zombie\
-	mprotect_basic
+	mprotect_basic\
+	allocator_a\
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 

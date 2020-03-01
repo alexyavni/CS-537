@@ -461,13 +461,3 @@ int munprotect(void *addr, int len)
   }
   return 0;
 }
-
-// dump the pages which have been allocated
-//      frames: a pointer to an allocated array of integers that will be filled in by the kernel
-//              with a list of all the frame numbers that are currently allocated
-//      numframes: The previous numframes allocated frames whose information we are asking for.
-int dump_allocated(int *frames, int numframes)
-{
-
-  return 0;
-}

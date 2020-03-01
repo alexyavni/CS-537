@@ -15,7 +15,11 @@ struct run {
 struct {
   struct spinlock lock;
   struct run *freelist;
+  char * alloc_list [1000];
+  int alloc_count;
 } kmem;
+
+
 
 extern char end[]; // first address after kernel loaded from ELF file
 
@@ -27,7 +31,7 @@ kinit(void)
 
   initlock(&kmem.lock, "kmem");
   p = (char*)PGROUNDUP((uint)end);
-  for(; p + PGSIZE <= (char*)PHYSTOP; p += PGSIZE)
+  for(; p + PGSIZE <= (char*)PHYSTOP; p += 2*PGSIZE)
     kfree(p);
 }
 
@@ -64,8 +68,31 @@ kalloc(void)
   acquire(&kmem.lock);
   r = kmem.freelist;
   if(r)
+  {
     kmem.freelist = r->next;
+    kmem.alloc_list[kmem.alloc_count] = (char*)r;
+    kmem.alloc_count++;
+  }
   release(&kmem.lock);
   return (char*)r;
 }
 
+// dump the pages which have been allocated
+//      frames: a pointer to an allocated array of integers that will be filled in by the kernel
+//              with a list of all the frame numbers that are currently allocated
+//      numframes: The previous numframes allocated frames whose information we are asking for.
+int dump_allocated(int *frames, int numframes)
+{
+  int i,j = 0;
+  // cprintf("NUM FRAMES = %d\n", numframes);
+
+  for(i = kmem.alloc_count-1; i >= kmem.alloc_count-numframes; i--)
+  {
+    frames[j] = (int)kmem.alloc_list[i];
+    j++;
+    // cprintf("%d -> ", frames[j]);
+  }
+  // cprintf("\n");
+
+  return 0;
+}

@@ -9,7 +9,7 @@ build xv6 using make
 **********************************************************************
 Trying to clean project using make clean
 make clean
-rm -rf kernel/bio.o kernel/console.o kernel/exec.o kernel/file.o kernel/fs.o kernel/ide.o kernel/ioapic.o kernel/kalloc.o kernel/kbd.o kernel/lapic.o kernel/main.o kernel/mp.o kernel/picirq.o kernel/pipe.o kernel/proc.o kernel/spinlock.o kernel/string.o kernel/swtch.o kernel/syscall.o kernel/sysfile.o kernel/sysproc.o kernel/timer.o kernel/trapasm.o kernel/trap.o kernel/uart.o kernel/vectors.o kernel/vm.o kernel/bootmain.o kernel/bootasm.o kernel/multiboot.o kernel/data.o kernel/bootother.o kernel/initcode.o kernel/bio.d kernel/console.d kernel/exec.d kernel/file.d kernel/fs.d kernel/ide.d kernel/ioapic.d kernel/kalloc.d kernel/kbd.d kernel/lapic.d kernel/main.d kernel/mp.d kernel/picirq.d kernel/pipe.d kernel/proc.d kernel/spinlock.d kernel/string.d kernel/swtch.d kernel/syscall.d kernel/sysfile.d kernel/sysproc.d kernel/timer.d kernel/trapasm.d kernel/trap.d kernel/uart.d kernel/vectors.d kernel/vm.d kernel/bootmain.d kernel/bootasm.d kernel/multiboot.d kernel/data.d kernel/bootother.d kernel/initcode.d kernel/vectors.S kernel/bootblock kernel/bootblock.out kernel/bootother.out kernel/initcode.out kernel/kernel bootother initcode xv6.img user/bin user/cat user/echo user/forktest user/grep user/init user/kill user/ln user/ls user/mkdir user/rm user/sh user/stressfs user/tester user/usertests user/wc user/zombie user/mprotect_basic user/cat.o user/echo.o user/forktest.o user/grep.o user/init.o user/kill.o user/ln.o user/ls.o user/mkdir.o user/rm.o user/sh.o user/stressfs.o user/tester.o user/usertests.o user/wc.o user/zombie.o user/mprotect_basic.o user/ulib.o user/usys.o user/printf.o user/umalloc.o user/cat.d user/echo.d user/forktest.d user/grep.d user/init.d user/kill.d user/ln.d user/ls.d user/mkdir.d user/rm.d user/sh.d user/stressfs.d user/tester.d user/usertests.d user/wc.d user/zombie.d user/mprotect_basic.d user/ulib.d user/usys.d user/printf.d user/umalloc.d tools/mkfs tools/mkfs.o tools/mkfs.d fs fs.img .gdbinit .bochsrc dist
+rm -rf kernel/bio.o kernel/console.o kernel/exec.o kernel/file.o kernel/fs.o kernel/ide.o kernel/ioapic.o kernel/kalloc.o kernel/kbd.o kernel/lapic.o kernel/main.o kernel/mp.o kernel/picirq.o kernel/pipe.o kernel/proc.o kernel/spinlock.o kernel/string.o kernel/swtch.o kernel/syscall.o kernel/sysfile.o kernel/sysproc.o kernel/timer.o kernel/trapasm.o kernel/trap.o kernel/uart.o kernel/vectors.o kernel/vm.o kernel/bootmain.o kernel/bootasm.o kernel/multiboot.o kernel/data.o kernel/bootother.o kernel/initcode.o kernel/bio.d kernel/console.d kernel/exec.d kernel/file.d kernel/fs.d kernel/ide.d kernel/ioapic.d kernel/kalloc.d kernel/kbd.d kernel/lapic.d kernel/main.d kernel/mp.d kernel/picirq.d kernel/pipe.d kernel/proc.d kernel/spinlock.d kernel/string.d kernel/swtch.d kernel/syscall.d kernel/sysfile.d kernel/sysproc.d kernel/timer.d kernel/trapasm.d kernel/trap.d kernel/uart.d kernel/vectors.d kernel/vm.d kernel/bootmain.d kernel/bootasm.d kernel/multiboot.d kernel/data.d kernel/bootother.d kernel/initcode.d kernel/vectors.S kernel/bootblock kernel/bootblock.out kernel/bootother.out kernel/initcode.out kernel/kernel bootother initcode xv6.img user/bin user/cat user/echo user/forktest user/grep user/init user/kill user/ln user/ls user/mkdir user/rm user/sh user/stressfs user/tester user/usertests user/wc user/zombie user/mprotect_basic user/allocator_a user/cat.o user/echo.o user/forktest.o user/grep.o user/init.o user/kill.o user/ln.o user/ls.o user/mkdir.o user/rm.o user/sh.o user/stressfs.o user/tester.o user/usertests.o user/wc.o user/zombie.o user/mprotect_basic.o user/allocator_a.o user/ulib.o user/usys.o user/printf.o user/umalloc.o user/cat.d user/echo.d user/forktest.d user/grep.d user/init.d user/kill.d user/ln.d user/ls.d user/mkdir.d user/rm.d user/sh.d user/stressfs.d user/tester.d user/usertests.d user/wc.d user/zombie.d user/mprotect_basic.d user/allocator_a.d user/ulib.d user/usys.d user/printf.d user/umalloc.d tools/mkfs tools/mkfs.o tools/mkfs.d fs fs.img .gdbinit .bochsrc dist
 Trying to build project using make
 make
 Makefile:149: kernel/bio.d: No such file or directory
@@ -62,6 +62,7 @@ Makefile:149: user/usertests.d: No such file or directory
 Makefile:149: user/wc.d: No such file or directory
 Makefile:149: user/zombie.d: No such file or directory
 Makefile:149: user/mprotect_basic.d: No such file or directory
+Makefile:149: user/allocator_a.d: No such file or directory
 Makefile:149: user/ulib.d: No such file or directory
 Makefile:149: user/usys.d: No such file or directory
 Makefile:149: user/printf.d: No such file or directory
@@ -77,6 +78,8 @@ gcc  -I include -nostdinc -ggdb  -fno-pic -fno-builtin -fno-strict-aliasing -fno
 	-M -MG user/usys.S -MF user/usys.d -MT user/usys.d -MT user/usys.o
 gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
 	-M -MG user/ulib.c -MF user/ulib.d -MT user/ulib.d -MT user/ulib.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/allocator_a.c -MF user/allocator_a.d -MT user/allocator_a.d -MT user/allocator_a.o
 gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
 	-M -MG user/mprotect_basic.c -MF user/mprotect_basic.d -MT user/mprotect_basic.d -MT user/mprotect_basic.o
 gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
@@ -233,15 +236,15 @@ ld  -m    elf_i386 -nostdlib --omagic \
 dd if=/dev/zero of=xv6.img count=10000
 10000+0 records in
 10000+0 records out
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.182224 s, 28.1 MB/s
+5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.147525 s, 34.7 MB/s
 dd if=kernel/bootblock of=xv6.img conv=notrunc
 1+0 records in
 1+0 records out
-512 bytes copied, 0.000166829 s, 3.1 MB/s
+512 bytes copied, 0.000264373 s, 1.9 MB/s
 dd if=kernel/kernel of=xv6.img seek=1 conv=notrunc
-257+1 records in
-257+1 records out
-131632 bytes (132 kB, 129 KiB) copied, 0.000581678 s, 226 MB/s
+265+1 records in
+265+1 records out
+135872 bytes (136 kB, 133 KiB) copied, 0.000537868 s, 253 MB/s
 gcc -c  -iquote include -Wall -Werror -ggdb  -o tools/mkfs.o tools/mkfs.c
 gcc  tools/mkfs.o -o tools/mkfs
 mkdir -p fs
@@ -302,10 +305,14 @@ cp user/bin/zombie fs/zombie
 gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/mprotect_basic.o user/mprotect_basic.c
 ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/mprotect_basic user/mprotect_basic.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
 cp user/bin/mprotect_basic fs/mprotect_basic
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/allocator_a.o user/allocator_a.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/allocator_a user/allocator_a.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/allocator_a fs/allocator_a
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -322,9 +329,9 @@ sh
 kill
 cat
 echo
-balloc: first 428 blocks have been allocated
+balloc: first 448 blocks have been allocated
 balloc: write bitmap block at sector 28
-rm user/bin/ls user/bin/stressfs user/bin/mprotect_basic user/bin/grep user/bin/sh user/bin/tester user/bin/kill user/bin/cat user/bin/mkdir user/bin/init user/bin/rm user/bin/echo user/bin/ln user/bin/usertests user/bin/wc user/bin/zombie
+rm user/bin/ls user/bin/stressfs user/bin/mprotect_basic user/bin/grep user/bin/sh user/bin/tester user/bin/kill user/bin/cat user/bin/mkdir user/bin/init user/bin/rm user/bin/echo user/bin/ln user/bin/usertests user/bin/wc user/bin/allocator_a user/bin/zombie
 
 
 test build PASSED
@@ -350,6 +357,7 @@ cp user/bin/tester fs/tester
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -366,7 +374,7 @@ sh
 kill
 cat
 echo
-balloc: first 430 blocks have been allocated
+balloc: first 450 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -412,6 +420,7 @@ cp user/bin/tester fs/tester
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -428,7 +437,7 @@ sh
 kill
 cat
 echo
-balloc: first 429 blocks have been allocated
+balloc: first 449 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -448,6 +457,7 @@ tester
 write to protected page in the child
 pid 4 tester: trap 14 err 7 on cpu 0 eip 0xb9 addr 0x2000--kill proc
 TEST PASSED
+
 
 test mprotect_fork PASSED (5 of 5)
  (check whether fork inherit the write bit from parent)
@@ -472,6 +482,7 @@ cp user/bin/tester fs/tester
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -488,7 +499,7 @@ sh
 kill
 cat
 echo
-balloc: first 430 blocks have been allocated
+balloc: first 450 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -534,6 +545,7 @@ cp user/bin/tester fs/tester
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -550,7 +562,7 @@ sh
 kill
 cat
 echo
-balloc: first 431 blocks have been allocated
+balloc: first 451 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -600,6 +612,7 @@ cp user/bin/tester fs/tester
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -616,7 +629,7 @@ sh
 kill
 cat
 echo
-balloc: first 429 blocks have been allocated
+balloc: first 449 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -667,6 +680,7 @@ cp user/bin/tester fs/tester
 used 29 (bit 1 ninode 26) free 29 total 1024
 grep
 ls
+allocator_a
 rm
 ln
 stressfs
@@ -683,7 +697,7 @@ sh
 kill
 cat
 echo
-balloc: first 429 blocks have been allocated
+balloc: first 449 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
 make qemu-nox CPUS=1
@@ -700,12 +714,13 @@ cpu0: starting
 init: starting sh
 $ tester
 tester
-TEST FAILED
+NUM FRAMES = 100
+0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 39 -> 409600 -> 
+TEST PASSED
 
 
-test allocator_a FAILED (0 of 5)
+test allocator_a PASSED (5 of 5)
  (test the alternate allocator in part 2)
- tester failed
 
 **********************************************************************
 Summary:
@@ -727,10 +742,9 @@ test test_protect PASSED (8 of 8)
 test protect_error PASSED (5 of 5)
  (check the error handling of mprotect and munprotect)
 
-test allocator_a FAILED (0 of 5)
+test allocator_a PASSED (5 of 5)
  (test the alternate allocator in part 2)
- tester failed
 
-Passed 6 of 7 tests.
-Overall 6 of 7
-Points 28 of 33
+Passed 7 of 7 tests.
+Overall 7 of 7
+Points 33 of 33
