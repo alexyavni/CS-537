@@ -1,7 +1,14 @@
 #include "param.h"
 #include "types.h"
-#include "defs.h"
-#include "x86.h"
+#include "rand.h"
+
+// typedef struct xorshift32_state {
+//   uint seed;
+// } State;
+
+// State state = {.seed = 1};
+
+static uint state = 1;
 
 /* 
     Return a random integer between 0 and XV6_RAND_MAX inclusive. 
@@ -10,7 +17,13 @@
 */
 int xv6_rand (void)
 {
-    return 0;
+    uint x = state;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+    // cprintf("state = %d", x);
+    state = x;
+	return (int)(state % XV6_RAND_MAX);
 }
 
 /* 
@@ -20,5 +33,6 @@ int xv6_rand (void)
 */
 void xv6_srand (unsigned int seed)
 {
-    
+    state = seed;
+    return;
 }
