@@ -18,24 +18,37 @@ struct
 {
   struct spinlock lock;
   struct run *freelist;
-  int num_free_list;
-  char *alloc_list[1000];
-  int alloc_count;
-
 } kmem;
 
+struct
+{
+  char *alloc_list[1000];
+  int alloc_count;
+  int num_free_list;
+} allocated;
+
+
+
 extern char end[]; // first address after kernel loaded from ELF file
+
+void cleanup_arr(void);
 
 // Initialize free list of physical pages.
 void kinit(void)
 {
   char *p;
-  kmem.num_free_list = 0;
+  allocated.num_free_list = 0;
 
   initlock(&kmem.lock, "kmem");
   p = (char *)PGROUNDUP((uint)end);
   for (; p + PGSIZE <= (char *)PHYSTOP; p += PGSIZE)
     kfree(p);
+
+  int i = 0;
+  for (i = 0; i < 1000; i++)
+  {
+    allocated.alloc_list[i] = 0;
+  }
 }
 
 // Free the page of physical memory pointed at by v,
@@ -56,8 +69,37 @@ void kfree(char *v)
   r = (struct run *)v;
   r->next = kmem.freelist;
   kmem.freelist = r;
-  kmem.num_free_list++;
+  int i = 0;
+  for (i = 0; i < allocated.alloc_count; i++)
+  {
+    if (allocated.alloc_list[i] == (char *)r)
+    {
+      allocated.alloc_list[i] = 0;
+      cleanup_arr();
+      allocated.alloc_count--;
+    }
+  }
+  allocated.num_free_list++;
   release(&kmem.lock);
+}
+
+void cleanup_arr(void)
+{
+  int i, j = 0;
+  char *newList[1000];
+  for (i = 0; i < allocated.alloc_count; i++)
+  {
+    if (allocated.alloc_list[i] != 0)
+    {
+      newList[j] = allocated.alloc_list[i];
+      j++;
+    }
+  }
+
+  for (i = 0; i < allocated.alloc_count; i++)
+  {
+    allocated.alloc_list[i] = newList[i];
+  }
 }
 
 // Allocate one 4096-byte page of physical memory.
@@ -73,8 +115,9 @@ kalloc(void)
   r = kmem.freelist;
 
   int y = xv6_rand();
-  y %= kmem.num_free_list;
-//  cprintf("kalloc: page %x allocated.\n", y);
+
+  y %= (allocated.num_free_list);
+
   int i = 0;
 
   while (i < y)
@@ -84,20 +127,22 @@ kalloc(void)
     i++;
   }
 
-  if (r && i == 0)
+  if (r)
   {
-    kmem.freelist = r->next;
-    kmem.alloc_list[kmem.alloc_count] = (char *)r;
-    kmem.alloc_count++;
+    if (i == 0)
+    {
+      kmem.freelist = r->next;
+      allocated.alloc_list[allocated.alloc_count] = (char *)r;
+      allocated.alloc_count++;
+    }
+    else
+    {
+      prev->next = r->next;
+      allocated.alloc_list[allocated.alloc_count] = (char *)r;
+      allocated.alloc_count++;
+    }
   }
-  else if (r)
-  {
-    prev->next = r->next;
-    kmem.alloc_list[kmem.alloc_count] = (char *)r;
-    kmem.alloc_count++;
-  }
-
-  kmem.num_free_list--;
+  allocated.num_free_list--;
 
   release(&kmem.lock);
   return (char *)r;
@@ -109,13 +154,11 @@ kalloc(void)
 //      numframes: The previous numframes allocated frames whose information we are asking for.
 int dump_allocated(int *frames, int numframes)
 {
-  int i,j = 0;
-  
-  if(numframes >= kmem.alloc_count) return -1;
-  for(i = kmem.alloc_count-1; i >= kmem.alloc_count-numframes; i--)
+  int j = 0;
+
+  for (int i = numframes-1; i >= 0; i--)
   {
-    frames[j] = (int)kmem.alloc_list[i];
-    j++;
+    frames[j++] = (int)(allocated.alloc_list[i]);
   }
   return 0;
 }

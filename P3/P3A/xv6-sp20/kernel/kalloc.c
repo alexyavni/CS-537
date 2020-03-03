@@ -8,30 +8,37 @@
 #include "mmu.h"
 #include "spinlock.h"
 
-struct run {
+struct run
+{
   struct run *next;
 };
 
-struct {
+struct
+{
   struct spinlock lock;
   struct run *freelist;
-  char * alloc_list [1000];
-  int alloc_count;
 } kmem;
 
+struct
+{
+  char *alloc_list[1000];
+  int alloc_count;
+  int num_free_list;
+} allocated;
 
+void cleanup_arr(void);
 
 extern char end[]; // first address after kernel loaded from ELF file
 
 // Initialize free list of physical pages.
-void
-kinit(void)
+void kinit(void)
 {
   char *p;
+  allocated.num_free_list = 0;
 
   initlock(&kmem.lock, "kmem");
-  p = (char*)PGROUNDUP((uint)end);
-  for(; p + PGSIZE <= (char*)PHYSTOP; p += 2*PGSIZE)
+  p = (char *)PGROUNDUP((uint)end);
+  for (; p + PGSIZE <= (char *)PHYSTOP; p += 2 * PGSIZE)
     kfree(p);
 }
 
@@ -39,42 +46,73 @@ kinit(void)
 // which normally should have been returned by a
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
-void
-kfree(char *v)
+void kfree(char *v)
 {
   struct run *r;
 
-  if((uint)v % PGSIZE || v < end || (uint)v >= PHYSTOP) 
+  if ((uint)v % PGSIZE || v < end || (uint)v >= PHYSTOP)
     panic("kfree");
 
   // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
 
   acquire(&kmem.lock);
-  r = (struct run*)v;
+  r = (struct run *)v;
   r->next = kmem.freelist;
   kmem.freelist = r;
+
+  int i = 0;
+  for (i = 0; i < allocated.alloc_count; i++)
+  {
+    if (allocated.alloc_list[i] == (char *)r)
+    {
+      allocated.alloc_list[i] = 0;
+      cleanup_arr();
+      allocated.alloc_count--;
+    }
+  }
+  allocated.num_free_list++;
+
   release(&kmem.lock);
+}
+
+void cleanup_arr(void)
+{
+  int i, j = 0;
+  char *newList[1000];
+  for (i = 0; i < allocated.alloc_count; i++)
+  {
+    if (allocated.alloc_list[i] != 0)
+    {
+      newList[j] = allocated.alloc_list[i];
+      j++;
+    }
+  }
+
+  for (i = 0; i < allocated.alloc_count; i++)
+  {
+    allocated.alloc_list[i] = newList[i];
+  }
 }
 
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
-char*
+char *
 kalloc(void)
 {
   struct run *r;
 
   acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r)
+  if (r)
   {
     kmem.freelist = r->next;
-    kmem.alloc_list[kmem.alloc_count] = (char*)r;
-    kmem.alloc_count++;
+    allocated.alloc_list[allocated.alloc_count] = (char *)r;
+    allocated.alloc_count++;
   }
   release(&kmem.lock);
-  return (char*)r;
+  return (char *)r;
 }
 
 // dump the pages which have been allocated
@@ -83,13 +121,11 @@ kalloc(void)
 //      numframes: The previous numframes allocated frames whose information we are asking for.
 int dump_allocated(int *frames, int numframes)
 {
-  int i,j = 0;
-  
-  if(numframes >= kmem.alloc_count) return -1;
-  for(i = kmem.alloc_count-1; i >= kmem.alloc_count-numframes; i--)
+  int j = 0;
+
+  for (int i = numframes - 1; i >= 0; i--)
   {
-    frames[j] = (int)kmem.alloc_list[i];
-    j++;
+    frames[j++] = (int)(allocated.alloc_list[i]);
   }
   return 0;
 }

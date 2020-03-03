@@ -9,6 +9,10 @@ build xv6 using make
 **********************************************************************
 Trying to clean project using make clean
 make clean
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG kernel/rand.c -MF kernel/rand.d -MT kernel/rand.d -MT kernel/rand.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG kernel/kalloc.c -MF kernel/kalloc.d -MT kernel/kalloc.d -MT kernel/kalloc.o
 rm -rf kernel/bio.o kernel/console.o kernel/exec.o kernel/file.o kernel/fs.o kernel/ide.o kernel/ioapic.o kernel/kalloc.o kernel/kbd.o kernel/lapic.o kernel/main.o kernel/mp.o kernel/picirq.o kernel/pipe.o kernel/proc.o kernel/spinlock.o kernel/string.o kernel/swtch.o kernel/syscall.o kernel/sysfile.o kernel/sysproc.o kernel/timer.o kernel/trapasm.o kernel/trap.o kernel/uart.o kernel/vectors.o kernel/vm.o kernel/rand.o kernel/bootmain.o kernel/bootasm.o kernel/multiboot.o kernel/data.o kernel/bootother.o kernel/initcode.o kernel/bio.d kernel/console.d kernel/exec.d kernel/file.d kernel/fs.d kernel/ide.d kernel/ioapic.d kernel/kalloc.d kernel/kbd.d kernel/lapic.d kernel/main.d kernel/mp.d kernel/picirq.d kernel/pipe.d kernel/proc.d kernel/spinlock.d kernel/string.d kernel/swtch.d kernel/syscall.d kernel/sysfile.d kernel/sysproc.d kernel/timer.d kernel/trapasm.d kernel/trap.d kernel/uart.d kernel/vectors.d kernel/vm.d kernel/rand.d kernel/bootmain.d kernel/bootasm.d kernel/multiboot.d kernel/data.d kernel/bootother.d kernel/initcode.d kernel/vectors.S kernel/bootblock kernel/bootblock.out kernel/bootother.out kernel/initcode.out kernel/kernel bootother initcode xv6.img user/bin user/cat user/echo user/forktest user/grep user/init user/kill user/ln user/ls user/mkdir user/rm user/sh user/stressfs user/tester user/usertests user/wc user/zombie user/allocator_b user/cat.o user/echo.o user/forktest.o user/grep.o user/init.o user/kill.o user/ln.o user/ls.o user/mkdir.o user/rm.o user/sh.o user/stressfs.o user/tester.o user/usertests.o user/wc.o user/zombie.o user/allocator_b.o user/ulib.o user/usys.o user/printf.o user/umalloc.o user/cat.d user/echo.d user/forktest.d user/grep.d user/init.d user/kill.d user/ln.d user/ls.d user/mkdir.d user/rm.d user/sh.d user/stressfs.d user/tester.d user/usertests.d user/wc.d user/zombie.d user/allocator_b.d user/ulib.d user/usys.d user/printf.d user/umalloc.d tools/mkfs tools/mkfs.o tools/mkfs.d fs fs.img .gdbinit .bochsrc dist
 Trying to build project using make
 make
@@ -237,15 +241,15 @@ ld  -m    elf_i386 -nostdlib --omagic \
 dd if=/dev/zero of=xv6.img count=10000
 10000+0 records in
 10000+0 records out
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.168375 s, 30.4 MB/s
+5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.020345 s, 252 MB/s
 dd if=kernel/bootblock of=xv6.img conv=notrunc
 1+0 records in
 1+0 records out
-512 bytes copied, 0.0011653 s, 439 kB/s
+512 bytes copied, 0.000100831 s, 5.1 MB/s
 dd if=kernel/kernel of=xv6.img seek=1 conv=notrunc
-257+1 records in
-257+1 records out
-131876 bytes (132 kB, 129 KiB) copied, 0.000580557 s, 227 MB/s
+258+1 records in
+258+1 records out
+132172 bytes (132 kB, 129 KiB) copied, 0.00049196 s, 269 MB/s
 gcc -c  -iquote include -Wall -Werror -ggdb  -o tools/mkfs.o tools/mkfs.c
 gcc  tools/mkfs.o -o tools/mkfs
 mkdir -p fs
@@ -308,24 +312,24 @@ ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --o
 cp user/bin/allocator_b fs/allocator_b
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
-grep
-ls
-rm
-ln
-stressfs
-zombie
+echo
 allocator_b
-init
-mkdir
-wc
-usertests
-README
-forktest
+ls
+zombie
+kill
+stressfs
+rm
 tester
 sh
-kill
+README
+wc
+mkdir
+ln
+usertests
+init
 cat
-echo
+forktest
+grep
 balloc: first 427 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/ls user/bin/stressfs user/bin/grep user/bin/sh user/bin/tester user/bin/kill user/bin/cat user/bin/mkdir user/bin/init user/bin/rm user/bin/echo user/bin/allocator_b user/bin/ln user/bin/usertests user/bin/wc user/bin/zombie
@@ -343,21 +347,21 @@ compile and test the uniformity and randomness of the random number generator
 
 **********************************************************************
 gcc -Wl,-wrap,rand /u/c/s/cs537-1/tests/p3b/ctests/rand_tester.c kernel/rand.c -I./include -I./user -I.kernel/ -o rand_tester -Wall -Werror
-/tmp/tmpK1jP5R/p/./rand_tester 139 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 4114 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 5532 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 1393 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 1494 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 2790 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 995 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 5813 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 2469 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 671 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 1904 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 1324 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 3913 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 1168 2147483647
-/tmp/tmpK1jP5R/p/./rand_tester 1949 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 1994 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 5453 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 3676 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 2126 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 2635 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 1773 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 3973 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 3841 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 4182 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 5508 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 2612 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 2065 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 5089 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 4061 2147483647
+/tmp/tmpOPQn4W/p/./rand_tester 4164 2147483647
 
 
 test statistical test PASSED (5 of 5)
@@ -402,38 +406,38 @@ ld  -m    elf_i386 -nostdlib --omagic \
 dd if=/dev/zero of=xv6.img count=10000
 10000+0 records in
 10000+0 records out
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.166785 s, 30.7 MB/s
+5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.022377 s, 229 MB/s
 dd if=kernel/bootblock of=xv6.img conv=notrunc
 1+0 records in
 1+0 records out
-512 bytes copied, 0.000312862 s, 1.6 MB/s
+512 bytes copied, 6.4599e-05 s, 7.9 MB/s
 dd if=kernel/kernel of=xv6.img seek=1 conv=notrunc
 258+1 records in
 258+1 records out
-132268 bytes (132 kB, 129 KiB) copied, 0.00149282 s, 88.6 MB/s
+132564 bytes (133 kB, 129 KiB) copied, 0.00051716 s, 256 MB/s
 gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
 ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
 cp user/bin/tester fs/tester
 ./tools/mkfs fs.img fs
 used 29 (bit 1 ninode 26) free 29 total 1024
-grep
-ls
-rm
-ln
-stressfs
-zombie
+echo
 allocator_b
-init
-mkdir
-wc
-usertests
-README
-forktest
+ls
+zombie
+kill
+stressfs
+rm
 tester
 sh
-kill
+README
+wc
+mkdir
+ln
+usertests
+init
 cat
-echo
+forktest
+grep
 balloc: first 428 blocks have been allocated
 balloc: write bitmap block at sector 28
 rm user/bin/tester
@@ -451,14 +455,11 @@ cpu0: starting
 init: starting sh
 $ tester
 tester
-Return non-zero value
-Error: random allocator return incorrect result under fixed sequence
-TEST FAILED
+TEST PASSED
 
 
-test allocator_b FAILED (0 of 5)
+test allocator_b PASSED (5 of 5)
  (test the random allocator in part 3)
- tester failed
 
 **********************************************************************
 Summary:
@@ -471,10 +472,9 @@ test statistical test PASSED (5 of 5)
 test srand behavior test PASSED (3 of 3)
  (test the behavior of srand according to the definition in the header file)
 
-test allocator_b FAILED (0 of 5)
+test allocator_b PASSED (5 of 5)
  (test the random allocator in part 3)
- tester failed
 
-Passed 3 of 4 tests.
-Overall 3 of 4
-Points 8 of 13
+Passed 4 of 4 tests.
+Overall 4 of 4
+Points 13 of 13
