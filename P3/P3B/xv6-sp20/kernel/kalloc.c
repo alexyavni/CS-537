@@ -154,6 +154,7 @@ kalloc(void)
 //      numframes: The previous numframes allocated frames whose information we are asking for.
 int dump_allocated(int *frames, int numframes)
 {
+  if(numframes > allocated.alloc_count) return -1;
   int j = 0;
 
   for (int i = numframes-1; i >= 0; i--)
