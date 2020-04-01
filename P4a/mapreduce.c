@@ -44,7 +44,35 @@ MR_DefaultHashPartition(char *key, int num_partitions)
 
 char *MyCombinerGetter(char *key)
 {
-    return "blah";
+    pthread_t curr_thread = pthread_self();
+    int index = -1;
+    for(int i = 0; i < NUM_mappers; i++)
+    {
+        if(map_threads[i] == curr_thread)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    struct Key * head = map_structs[index];
+    struct Key * prev = head;
+    while(head != 0)
+    {
+        if(strcmp(head->key, key) == 0)
+        {
+            prev->next = head->next;
+            char * ret = malloc(strlen(head->value));
+            strcpy(ret, head->value);
+            free(head->key);
+            free(head->value);
+            free(head);
+            return ret;
+        }
+        prev = head;
+        head = head->next;
+    }
+    return NULL;
 }
 
 char *MyReducerGetter(char *key, int partition_number)
@@ -131,6 +159,7 @@ void *mapper_wrapper(MapperArgs *mapper_args)
     // How do we use whatever came out of the mapper?
 
     // After mapper is done, invoke combiner, etc.
+
     return 0;
 }
 
