@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
+#include <pthread.h>
 #include "mapreduce.h"
 
 #ifndef NUM_MAPPERS
@@ -31,11 +32,25 @@ void Map(char *file_name) {
     while (getline(&line, &size, fp) != -1) {
         char *token, *dummy = line;
         while ((token = strsep(&dummy, "., \t\n\r")) != NULL) {
-            MR_EmitToReducer(token, "1");
+            MR_EmitToCombiner(token, "1");
         }
     }
     free(line);
     fclose(fp);
+}
+
+void Combine(char *key, CombineGetter get_next) {
+    int count = 0;
+    char *value;
+    while ((value = get_next(key)) != NULL) {
+        count ++; // Emmited Map values are "1"s
+    }
+
+    value = (char*)malloc(12 * sizeof(char));
+    sprintf(value, "%d", count);
+
+    MR_EmitToReducer(key, value);
+    free(value);
 }
 
 void Reduce(char *key, ReduceStateGetter get_state,
@@ -55,10 +70,14 @@ void Reduce(char *key, ReduceStateGetter get_state,
     free(value);
 }
 
+unsigned long MyPartitioner(char *key, int num_buckets)  {
+    return ((unsigned long)*key)%num_buckets;
+}
+
 int main(int argc, char *argv[]) {
     char buf[64];
     for(int i=0;i<NUM_REDUCERS;i++){
-    	sprintf(buf, "wordcount_%s(%d).out", FILE_OUTPUT_SUFFIX,i);
+    	sprintf(buf, "wordcount_cp_cc_%s(%d).out", FILE_OUTPUT_SUFFIX,i);
     	if( (output_fd[i] = open(buf, O_CREAT|O_TRUNC|O_WRONLY,0664)) < 0 ){
     	    perror("file open error");
     	    exit(1);
@@ -69,7 +88,7 @@ int main(int argc, char *argv[]) {
     double cpu_time_used;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    MR_Run(argc, argv, Map, NUM_MAPPERS, Reduce, NUM_REDUCERS, NULL, MR_DefaultHashPartition);
+    MR_Run(argc, argv, Map, NUM_MAPPERS, Reduce, NUM_REDUCERS, Combine, MyPartitioner);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     cpu_time_used = (end.tv_sec - start.tv_sec);
@@ -83,3 +102,6 @@ int main(int argc, char *argv[]) {
         }
     }
 }
+
+
+
