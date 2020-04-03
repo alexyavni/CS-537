@@ -24,6 +24,12 @@ typedef struct Key
     struct Key *next;
 } Key;
 
+
+// Merge sort:
+void MergeSort(struct Key** headRef);
+struct Key* SortedMerge(struct Key* a, struct Key* b); 
+void FrontBackSplit(struct Key* source, struct Key** frontRef, struct Key** backRef); 
+
 typedef struct MapperArgs
 {
     char *filename;
@@ -113,7 +119,7 @@ char *MyReducerGetter(char *key, int partition_number)
 
 void MR_EmitToCombiner(char *key, char *value)
 {
-    printf("EMIT key = %s\n", key);
+    //printf("EMIT key = %s\n", key);
     pthread_t curr_thread = pthread_self();
     int index = -1;
     for(int i = 0; i < NUM_mappers; i++)
@@ -169,7 +175,7 @@ int addPair_Partition(char *key, char* value, unsigned long partition)
 {
         struct Key * head = reduce_structs[partition];
         struct Key * newPair = (struct Key *)malloc(sizeof(struct Key *));
-
+        //printf(".\n");
         char* key_copy = malloc(strlen(key));
         char* val_copy = malloc(strlen(value));
         strcpy(key_copy,key);
@@ -177,6 +183,18 @@ int addPair_Partition(char *key, char* value, unsigned long partition)
 
         newPair->key = key_copy;
         newPair->value = val_copy;
+
+        /*new stuff*/
+        // while(head->next != 0)
+        // {
+        //     if(strcmp(head->key, key) == 0)
+        //     {
+        //         //foundMatch = 1;
+        //         printf("found match: param = '%s', node = '%s'\n", key, head -> key);
+        //         break;
+        //     }
+        //     head = head -> next;
+        // }
         newPair->next = head->next;
         head->next = newPair;
 
@@ -225,7 +243,7 @@ void *mapper_wrapper(MapperArgs *mapper_args)
 {
     // This function is called by map threads
     // We will invoke mapper here
-    printf("in mapper wrapper\n");
+    //printf("in mapper wrapper\n");
     Mapper map = mapper_args->map;
     map(mapper_args->filename); // Is there a return ?
     // How do we use whatever came out of the mapper?
@@ -237,17 +255,16 @@ void *mapper_wrapper(MapperArgs *mapper_args)
     {
         if(map_threads[i] == curr_thread)
         {
-            printf("found thread!!");
+            //printf("found thread!!");
             index = i;
             break;
         }
     }
 
-    printKeys(index);
-
     // After mapper is done, invoke combiner, etc.
     Combiner combine = mapper_args->combiner;
     Key * head = map_structs[index];
+    MergeSort(&(head->next));
     while(head->next != 0)
     {
         //printf("IN COMB: index %d, key: %s\n", index, head->next->key);
@@ -262,15 +279,17 @@ void *mapper_wrapper(MapperArgs *mapper_args)
 
 void *reducer_wrapper(ReducerArgs *reducer_args)
 {
-    printf("IN REDUCER WRAPPER******************************\n");
+    //printf("IN REDUCER WRAPPER ******************************\n");
     int partition_num = reducer_args->partitionNum;
     Reducer reduce = reducer_args->reducer;
     ReduceGetter getter = reducer_args->getter;
     
+    //printf("Calling merge sort ******************************\n");
     Key * head = reduce_structs[partition_num];
+    MergeSort(&(head->next));
     while(head->next != 0)
     {
-        //printf("IN COMB: index %d, key: %s\n", index, head->next->key);
+        //printf("IN REDUCER: index %d, key: %s\n", partition_num, head->next->key);
         char* key = malloc(strlen(head->next->key));
         strcpy(key, head->next->key);
         reduce(key, NULL, getter, partition_num);
@@ -283,7 +302,7 @@ void *reducer_wrapper(ReducerArgs *reducer_args)
 void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce, int num_reducers,
             Combiner combine, Partitioner partition)
 {
-    printf("Inside of MR_Run \n     argc = %d\n     num mappers = %d\n", argc, num_mappers);
+    //printf("Inside of MR_Run \n     argc = %d\n     num mappers = %d\n", argc, num_mappers);
     // Step 1: Create data structures that will hold intermediate data
     NUM_mappers = num_mappers;
     NUM_reducers = num_reducers;
@@ -302,7 +321,7 @@ void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce,
 
     for(int j = 0; j < (argc-1); j++)
     {
-        printf("argv[%d] = %s\n", j, argv[j+1]);
+        //printf("argv[%d] = %s\n", j, argv[j+1]);
         filenames[j] = malloc(sizeof(argv[j+1]));
         mapArgs[j] = malloc(sizeof(MapperArgs));
         mapArgs[j]->filename = argv[j+1];
@@ -343,7 +362,7 @@ void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce,
     map_threads = malloc(num_mappers * sizeof(pthread_t));
     for (int i = 0; i < num_mappers; ++i)
     {
-        printf("test in thread loop: file = %s\n", mapArgs[i]->filename);
+        //("test in thread loop: file = %s\n", mapArgs[i]->filename);
         pthread_create(&map_threads[i], NULL, m_wrapper, mapArgs[i]);
         if(i >= argc - 2) break;
     }
@@ -357,7 +376,7 @@ void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce,
     reduce_threads = malloc(num_reducers * sizeof(pthread_t));
     for (int i = 0; i < num_reducers; ++i)
     {
-        printf("generating thread i for reducer\n");
+        //printf("generating thread i for reducer\n");
         reduceArgs[i] = malloc(sizeof(ReducerArgs));
         reduceArgs[i]->getter = reduce_getter;
         reduceArgs[i]->partitionNum = i;
@@ -376,3 +395,82 @@ void MR_Run(int argc, char *argv[], Mapper map, int num_mappers, Reducer reduce,
     printf("\n\nALL DONE!!!!!!!!!!!!!!!!!!\n");
 
 }
+
+// *****************************************************************************************/
+/* function prototypes */
+  
+/* sorts the linked list by changing next pointers (not data) */
+void MergeSort(struct Key** headRef) 
+{ 
+    struct Key* head = *headRef; 
+    struct Key* a; 
+    struct Key* b; 
+  
+    /* Base case -- length 0 or 1 */
+    if ((head == 0) || (head->next == 0)) { 
+        return; 
+    } 
+  
+    /* Split head into 'a' and 'b' sublists */
+    FrontBackSplit(head, &a, &b); 
+  
+    /* Recursively sort the sublists */
+    MergeSort(&a); 
+    MergeSort(&b); 
+  
+    /* answer = merge the two sorted lists together */
+    *headRef = SortedMerge(a, b); 
+} 
+  
+/* See https:// www.geeksforgeeks.org/?p=3622 for details of this  
+function */
+struct Key* SortedMerge(struct Key* a, struct Key* b) 
+{ 
+    struct Key* result = 0; 
+  
+    /* Base cases */
+    if (a == 0) 
+        return (b); 
+    else if (b == 0) 
+        return (a); 
+  
+    /* Pick either a or b, and recur */
+    if (strcmp(a->key,b->key) <= 0) { 
+        result = a; 
+        result->next = SortedMerge(a->next, b); 
+    } 
+    else { 
+        result = b; 
+        result->next = SortedMerge(a, b->next); 
+    } 
+    return (result); 
+} 
+  
+/* UTILITY FUNCTIONS */
+/* Split the nodes of the given list into front and back halves, 
+    and return the two lists using the reference parameters. 
+    If the length is odd, the extra node should go in the front list. 
+    Uses the fast/slow pointer strategy. */
+void FrontBackSplit(struct Key* source, 
+                    struct Key** frontRef, struct Key** backRef) 
+{ 
+    struct Key* fast; 
+    struct Key* slow; 
+    slow = source; 
+    fast = source->next; 
+  
+    /* Advance 'fast' two nodes, and advance 'slow' one node */
+    while (fast != 0) { 
+        fast = fast->next; 
+        if (fast != 0) { 
+            slow = slow->next; 
+            fast = fast->next; 
+        } 
+    } 
+  
+    /* 'slow' is before the midpoint in the list, so split it in two 
+    at that point. */
+    *frontRef = source; 
+    *backRef = slow->next; 
+    slow->next = 0; 
+} 
