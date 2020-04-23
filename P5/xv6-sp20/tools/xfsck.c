@@ -157,7 +157,14 @@ int main(int argc, char *argv[])
                 {
                     // . directory
                     // Make sure it points to self
+                    // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     dot_found = 1;
+                    // printf("Dot dir with inum = %d, j = %d\n", entry[i].inum, j);
+                    if(entry[i].inum != j)
+                    {
+                        fprintf( stderr, "ERROR: directory not properly formatted.\n");
+                        exit(1);
+                    }
                 }
                 else if(strcmp(entry[i].name,"..") == 0)
                 {
