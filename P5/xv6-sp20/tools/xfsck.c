@@ -79,6 +79,8 @@ int main(int argc, char *argv[])
     //
     // unused | superblock | inode blocks
     // root inode probably in block 2
+    char *bitmap = (char *) (img_ptr + BBLOCK(0, sb->ninodes) * BSIZE); 
+
     struct dinode *dip = (struct dinode *) (img_ptr + 2 * BSIZE);
     // print_inode(dip[0]);
     // print_inode(dip[1]);
@@ -91,6 +93,7 @@ int main(int argc, char *argv[])
     int dot_found = 0;
     int two_dot_found = 0;
     // printf("max = %d, min = %d\n", size_fs, data_block_addr);
+
     while(j < sb->ninodes)
     {
         // check if type is 0 - if so , continue (skip that inode)
@@ -108,15 +111,21 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
+
+        // bitmap = (char *) (img_ptr + BBLOCK(0, sb->ninodes) * BSIZE); 
+        // printf("bitmap bit %lx, j = %d, type = %d \n", bitmap[j/8], j, type );
+        // char bit_l = bitmap[j/8];
+        // char bit_masked = bit_l & (0x1 << (j%8));
+        // char bit_final = bit_masked >> (j%8);
+        // printf("bit FINAL %01lx \n", bit_final);
+
         // iterate NDIRECT addresses for each inode
         // id addr 0 - we don't check this one
         // last one points to list of indirect addrs
         // if last entry is non-zero - there is indirect block (if valid)
         //      iterate indirect addresses - div by sizeof ptr to iterate the block
-        // printf("addr = %d, size = %d, FILE TYPE = %d.\n", dip[j].addrs[0], dip[j].size, type);
 
         // ******************************* CHECK 3 *******************************
-
         // printf("MAX = %d, MIN = %d, j = %d\n", size_fs, data_block_addr, j);
         for(int k = 0; k < NDIRECT; k++)
         {
@@ -126,6 +135,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "ERROR: bad direct address in inode.\n");
                 exit(1);
             }
+            // printf("    addr: %d \n", dip[j].addrs[k]);
         }
         // Indirect addresses block ptr
         uint* indirect = (uint*) (img_ptr + BSIZE * dip[j].addrs[NDIRECT]);
@@ -157,9 +167,7 @@ int main(int argc, char *argv[])
                 {
                     // . directory
                     // Make sure it points to self
-                    // TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     dot_found = 1;
-                    // printf("Dot dir with inum = %d, j = %d\n", entry[i].inum, j);
                     if(entry[i].inum != j)
                     {
                         fprintf( stderr, "ERROR: directory not properly formatted.\n");
@@ -176,6 +184,21 @@ int main(int argc, char *argv[])
             if(two_dot_found == 0 || dot_found == 0)
             {
                 fprintf( stderr, "ERROR: directory not properly formatted.\n");
+                exit(1);
+            }
+        }
+        
+        for(int k = 0; k < NDIRECT; k++)
+        {
+            char bit_l = bitmap[(dip[j].addrs[k])/8];
+            int mask = 0x1 << ((dip[j].addrs[k])%8);
+            char bit_masked = bit_l & mask;
+            int bit_final = bit_masked >> ((dip[j].addrs[k])%8);
+            bit_final = bit_final & 1;
+            // printf("inode j = %d, type = %d, full bitmap chunk = %d, mask = %d, masked = %d, final bit = %d \n", j, type, bit_l, mask, bit_masked, bit_final);
+            if(bit_final != 1)
+            {
+                fprintf(stderr, "ERROR: address used by inode but marked free in bitmap.\n");
                 exit(1);
             }
         }
@@ -205,27 +228,6 @@ int main(int argc, char *argv[])
     // 1 + 1 + 25 + 2 + 995 = 1024
     //
     // --------- Total blocks 1024
-
-
-    // struct superblock {
-    //   uint size;         // Size of file system image (blocks)
-    //   uint nblocks;      // Number of data blocks
-    //   uint ninodes;      // Number of inodes.
-    // };
-
-    // struct dinode {
-    // short type;           // File type
-    // short major;          // Major device number (T_DEV only)
-    // short minor;          // Minor device number (T_DEV only)
-    // short nlink;          // Number of links to inode in file system
-    // uint size;            // Size of file (bytes)
-    // uint addrs[NDIRECT+1];   // Data block addresses
-    // };
-
-    // struct dirent {
-    // ushort inum;
-    // char name[DIRSIZ];
-    // };
 
     // Access bitmap - make sure you consider BITS vs bytes
     // With 512 bytes you can store 4096 bits - so we have enough bits for our data blocks
