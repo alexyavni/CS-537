@@ -85,8 +85,11 @@ int main(int argc, char *argv[])
 
     uint data_block_addr = dip[1].addrs[0];
     uint size_fs = sb->size;
+    uint curr_block_addr;
 
     int j = 1;
+    int dot_found = 0;
+    int two_dot_found = 0;
     // printf("max = %d, min = %d\n", size_fs, data_block_addr);
     while(j < sb->ninodes)
     {
@@ -99,7 +102,6 @@ int main(int argc, char *argv[])
         }
         // ******************************* CHECK 2 *******************************
         // Each inode is either unallocated or one of the valid types (T_FILE, T_DIR, T_DEV)
-        //printf("name: %s", dip[j].)
         if(type != 0 && type != T_DEV && type != T_DIR && type != T_FILE)
         {
             fprintf( stderr, "ERROR: bad inode.\n");
@@ -113,31 +115,70 @@ int main(int argc, char *argv[])
         //      iterate indirect addresses - div by sizeof ptr to iterate the block
         // printf("addr = %d, size = %d, FILE TYPE = %d.\n", dip[j].addrs[0], dip[j].size, type);
 
-        for(int k = 0; k < NDIRECT+1; k++)
+        // ******************************* CHECK 3 *******************************
+
+        // printf("MAX = %d, MIN = %d, j = %d\n", size_fs, data_block_addr, j);
+        for(int k = 0; k < NDIRECT; k++)
         {
-            if(dip[j].addrs[0] != 0 && (dip[j].addrs[0] >= size_fs || dip[j].addrs[0] < data_block_addr))
+            if(dip[j].addrs[k] != 0 && (dip[j].addrs[k] >= size_fs || dip[j].addrs[k] < data_block_addr))
             {
-                fprintf( stderr, "ERROR: bad direct address in inode.\n");
+                // printf("ERROR on addr = %d\n", dip[j].addrs[k]);
+                fprintf(stderr, "ERROR: bad direct address in inode.\n");
                 exit(1);
             }
         }
-        
         // Indirect addresses block ptr
         uint* indirect = (uint*) (img_ptr + BSIZE * dip[j].addrs[NDIRECT]);
 
         if(dip[j].addrs[NDIRECT] != 0)
         {
             for (int i = 0; i < BSIZE/sizeof(uint); ++i) {
-                // printf("%d ", cat_indirect[i]);
-                if(indirect[i]!= 0 && (indirect[i] >= size_fs || indirect[i] < data_block_addr))
+                // printf("indir addr #%d %d\n", i, indirect[i]);
+                if(indirect[i] != 0 && (indirect[i] >= size_fs || indirect[i] < data_block_addr))
                 {
-                    fprintf( stderr, "ERROR: bad indirect address in inode.\n");
+                    // printf("ERROR on indir addr = %d\n", indirect[i]);
+                    fprintf(stderr, "ERROR: bad indirect address in inode.\n");
                     exit(1);
                 }
             }  
         }
+
+        if(dip[j].type == T_DIR)
+        {
+            // ******************************* CHECK 4 *******************************
+            // Each directory contains . and .. entries, and the . entry points to the directory itself. 
+            dot_found = 0;
+            two_dot_found = 0;
+            curr_block_addr = dip[j].addrs[0];
+            struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
+            for (int i = 0; i < DIRSIZ; ++i) {
+                // printf("name is %s inum is %d\n", entry[i].name, entry[i].inum);
+                if(strcmp(entry[i].name,".") == 0)
+                {
+                    // . directory
+                    // Make sure it points to self
+                    dot_found = 1;
+                }
+                else if(strcmp(entry[i].name,"..") == 0)
+                {
+                    // .. directory
+                    two_dot_found = 1;
+                }
+            }
+
+            if(two_dot_found == 0 || dot_found == 0)
+            {
+                fprintf( stderr, "ERROR: directory not properly formatted.\n");
+                exit(1);
+            }
+        }
+        
         j++;
 
+        // Check 4: Each directory contains . and .. entries, 
+        // and the . entry points to the directory itself. 
+        // (NOTE: The root directory / should also have both entries). 
+        // If not, print ERROR: directory not properly formatted.
         // cmp dir pointing to self - use inum
     }
 
