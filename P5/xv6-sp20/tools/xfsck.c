@@ -74,15 +74,17 @@ int main(int argc, char *argv[])
     int two_dot_found = 0;
 
     int list_addrs_used[sb->nblocks];
-    // int list_addrs_used_i[sb->ninodes];
+    int list_addrs_used_i[sb->ninodes];
+    int in_use_inodes[sb->ninodes];
 
     for (int i = 0; i < sb->nblocks; i++)
     {
         list_addrs_used[i] = 0;
-        // if(i < sb->ninodes)
-        // {
-        //     list_addrs_used_i[i] = 0;
-        // }
+        if(i < sb->ninodes)
+        {
+            list_addrs_used_i[i] = 0;
+            in_use_inodes[i] = 0;
+        }
     }
 
     while (j < sb->ninodes)
@@ -94,7 +96,6 @@ int main(int argc, char *argv[])
             j++;
             continue;
         }
-        // list_addrs_used_i[j] = 1;
 
         // ******************************* CHECK 2 *******************************
         // Each inode is either unallocated or one of the valid types (T_FILE, T_DIR, T_DEV)
@@ -104,6 +105,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
+        in_use_inodes[j] = 1;
         uint num_blocks = 0;
 
         // ******************************* CHECK 3 *******************************
@@ -138,7 +140,6 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
                 list_addrs_used[dip[j].addrs[k]] = 1;
-                //printf("direct:     adding to list %d\n", dip[j].addrs[k]);
             }
         }
 
@@ -148,7 +149,6 @@ int main(int argc, char *argv[])
         if (dip[j].addrs[NDIRECT] != 0)
         {
             list_addrs_used[dip[j].addrs[NDIRECT]] = 1;
-            // printf("direct:     adding to list %d\n", dip[j].addrs[NDIRECT]);
             for (int i = 0; i < BSIZE / sizeof(uint); ++i)
             {
                 if (indirect[i] != 0 && (indirect[i] >= size_fs || indirect[i] < data_block_addr))
@@ -174,25 +174,19 @@ int main(int argc, char *argv[])
                 {
                     num_blocks++;
                     list_addrs_used[indirect[i]] = 1;
-                    //printf("indirect:   adding to list %d\n", indirect[i]);
                 }
             }
         }
 
         if (dip[j].type == T_FILE)
         {
-            // printf("size of file = %d, j = %d, num_blocks = %d\n", dip[j].size, j, num_blocks);
-            
-            // There are 19 blocks of data, so we're using at MOST (19 * <block_size>) bytes of data, e.g. (19 * 512) = 9728,
             uint max = num_blocks * 512;
             uint min = (num_blocks - 1) * 512 + 1;
-            // printf("max = %d, min = %d\n", max, min);
             if(dip[j].size != 0 && (dip[j].size > max || dip[j].size < min))
             {
                 fprintf(stderr, "ERROR: incorrect file size in inode.\n");
                 exit(1);
             }
-            // and at LEAST ( [<num_blocks> - 1] * <block_size>+ 1) bytes of data, e.g. (18 * 512 + 1) = 9217.
 
         }
 
@@ -202,7 +196,8 @@ int main(int argc, char *argv[])
             two_dot_found = 0;
             curr_block_addr = dip[j].addrs[0];
             struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
-            for (int i = 0; i < DIRSIZ; ++i)
+            int num_entries = (dip[j].size / (DIRSIZ + 2));
+            for (int i = 0; i < num_entries; ++i)
             {
                 if (strcmp(entry[i].name, ".") == 0)
                 {
@@ -219,6 +214,11 @@ int main(int argc, char *argv[])
                 {
                     // .. directory
                     two_dot_found = 1;
+                }
+                else
+                {
+                    // Add directory entry inum to inode reference list
+                    list_addrs_used_i[entry[i].inum] = 1;
                 }
             }
 
@@ -251,6 +251,20 @@ int main(int argc, char *argv[])
     char bit_masked;
     int bit_final;
 
+    for (int i = 2; i < sb->ninodes; i++)
+    {
+        if (in_use_inodes[i] == 1 && list_addrs_used_i[i] == 0)
+        {
+            fprintf(stderr, "ERROR: inode marked used but not found in a directory.\n");
+            exit(1);
+        }
+        else if (in_use_inodes[i] == 0 && list_addrs_used_i[i] == 1)
+        {
+            fprintf(stderr, "ERROR: inode referred to in directory but marked free.\n");
+            exit(1);
+        }
+    }
+
     for (int i = data_block_addr; i < sb->nblocks; i++)
     {
         bit_l = bitmap[i / 8];
@@ -258,16 +272,13 @@ int main(int argc, char *argv[])
         bit_masked = bit_l & mask;
         bit_final = bit_masked >> (i % 8);
         bit_final = bit_final & 1;
-        // printf("i = %d, bit_final = %d, list val = %d\n", i, bit_final, list_addrs_used[i]);
 
         if (bit_final == 1 && list_addrs_used[i] == 0)
         {
-            // printf("i = %d, bit_final = %d, list val = %d\n", i, bit_final, list_addrs_used[i]);
             fprintf(stderr, "ERROR: bitmap marks block in use but it is not in use.\n");
             exit(1);
         }
     }
-    // printf("something %d\n", list_addrs_used[0]);
 
     return 0;
 }
