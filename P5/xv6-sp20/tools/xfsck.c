@@ -73,6 +73,12 @@ int main(int argc, char *argv[])
     int dot_found = 0;
     int two_dot_found = 0;
 
+    int list_addrs_used[sb->nblocks];
+    for (int i = 0; i < sb->nblocks; i++)
+    {
+        list_addrs_used[i] = 0;
+    }
+
     while (j < sb->ninodes)
     {
         // check if type is 0 - if so , continue (skip that inode)
@@ -112,6 +118,13 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "ERROR: address used by inode but marked free in bitmap.\n");
                 exit(1);
             }
+
+
+            if (dip[j].addrs[k] != 0) 
+            {
+                list_addrs_used[dip[j].addrs[k]] = 1;
+                // printf("direct:     adding to list %d\n", dip[j].addrs[k]);
+            }
         }
 
         // Indirect addresses block ptr
@@ -119,6 +132,7 @@ int main(int argc, char *argv[])
 
         if (dip[j].addrs[NDIRECT] != 0)
         {
+            list_addrs_used[dip[j].addrs[NDIRECT]] = 1;
             for (int i = 0; i < BSIZE / sizeof(uint); ++i)
             {
                 if (indirect[i] != 0 && (indirect[i] >= size_fs || indirect[i] < data_block_addr))
@@ -138,6 +152,12 @@ int main(int argc, char *argv[])
                 {
                     fprintf(stderr, "ERROR: address used by inode but marked free in bitmap.\n");
                     exit(1);
+                }
+
+                if (indirect[i] != 0) 
+                {
+                    list_addrs_used[indirect[i]] = 1;
+                    // printf("indirect:   adding to list %d\n", indirect[i]);
                 }
             }
         }
@@ -188,6 +208,30 @@ int main(int argc, char *argv[])
     // unused       | superblock | inode blocks [25] | unused    | bitmap (data)    | data blocks [995]
     // 0            | 1          | 2 ... 26          | 27        | 28               | 29 -> data blocks
     // 1 + 1 + 25 + 2 + 995 = 1024 total blocks
+
+    // ******************************* CHECK 6 *******************************
+    // For blocks marked in-use in bitmap, the block should actually be in-use in an inode or indirect
+    // block somewhere.
+    char bit_l;
+    int mask;
+    char bit_masked;
+    int bit_final;
+    for (int i = data_block_addr; i < sb->nblocks; i++)
+    {
+        bit_l = bitmap[i / 8];
+        mask = 0x1 << (i % 8);
+        bit_masked = bit_l & mask;
+        bit_final = bit_masked >> (i % 8);
+        bit_final = bit_final & 1;
+
+        if (bit_final == 1 && list_addrs_used[i] == 0)
+        {
+            // printf("i = %d, bit_final = %d, list val = %d\n", i, bit_final, list_addrs_used[i]);
+            fprintf(stderr, "ERROR: bitmap marks block in use but it is not in use.\n");
+            exit(1);
+        }
+    }
+    // printf("something %d\n", list_addrs_used[0]);
 
     return 0;
 }
