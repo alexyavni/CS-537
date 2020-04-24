@@ -76,14 +76,20 @@ int main(int argc, char *argv[])
     int list_addrs_used[sb->nblocks];
     int list_addrs_used_i[sb->ninodes];
     int in_use_inodes[sb->ninodes];
+    int file_nlinks[sb->ninodes];
+    int dir_nlinks[sb->ninodes];
+    int file_refs[sb->ninodes];
 
     for (int i = 0; i < sb->nblocks; i++)
     {
         list_addrs_used[i] = 0;
-        if(i < sb->ninodes)
+        if (i < sb->ninodes)
         {
             list_addrs_used_i[i] = 0;
             in_use_inodes[i] = 0;
+            file_nlinks[i] = 0;
+            dir_nlinks[i] = 0;
+            file_refs[i] = 0;
         }
     }
 
@@ -134,6 +140,9 @@ int main(int argc, char *argv[])
             if (dip[j].addrs[k] != 0)
             {
                 num_blocks++;
+
+                // ******************************* CHECK 7 *******************************
+                // For in-use inodes, each direct address in use is only used once.
                 if (list_addrs_used[dip[j].addrs[k]] == 1)
                 {
                     fprintf(stderr, "ERROR: direct address used more than once.\n");
@@ -178,25 +187,29 @@ int main(int argc, char *argv[])
             }
         }
 
+        // ******************************* CHECK 8 *******************************
+        // For in-use inodes, the file size stored must be within the actual number of blocks used for storage.
         if (dip[j].type == T_FILE)
         {
             uint max = num_blocks * 512;
             uint min = (num_blocks - 1) * 512 + 1;
-            if(dip[j].size != 0 && (dip[j].size > max || dip[j].size < min))
+            if (dip[j].size != 0 && (dip[j].size > max || dip[j].size < min))
             {
                 fprintf(stderr, "ERROR: incorrect file size in inode.\n");
                 exit(1);
             }
-
+            file_nlinks[j] = dip[j].nlink;
         }
 
         if (dip[j].type == T_DIR)
         {
+            dir_nlinks[j] = dip[j].nlink; // Directory # links always 1 ??
             dot_found = 0;
             two_dot_found = 0;
             curr_block_addr = dip[j].addrs[0];
             struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
             int num_entries = (dip[j].size / (DIRSIZ + 2));
+
             for (int i = 0; i < num_entries; ++i)
             {
                 if (strcmp(entry[i].name, ".") == 0)
@@ -219,6 +232,7 @@ int main(int argc, char *argv[])
                 {
                     // Add directory entry inum to inode reference list
                     list_addrs_used_i[entry[i].inum] = 1;
+                    file_refs[entry[i].inum]++;
                 }
             }
 
@@ -243,9 +257,6 @@ int main(int argc, char *argv[])
     // 0            | 1          | 2 ... 26          | 27        | 28               | 29 -> data blocks
     // 1 + 1 + 25 + 2 + 995 = 1024 total blocks
 
-    // ******************************* CHECK 6 *******************************
-    // For blocks marked in-use in bitmap, the block should actually be in-use in an inode or indirect
-    // block somewhere.
     char bit_l;
     int mask;
     char bit_masked;
@@ -253,6 +264,9 @@ int main(int argc, char *argv[])
 
     for (int i = 2; i < sb->ninodes; i++)
     {
+        // ******************************* CHECK 9 & 10 *******************************
+        // For all inodes marked in use, each must be referred to in at least one directory.
+        // For each inode number that is referred to in a valid directory, it is actually marked in use.
         if (in_use_inodes[i] == 1 && list_addrs_used_i[i] == 0)
         {
             fprintf(stderr, "ERROR: inode marked used but not found in a directory.\n");
@@ -263,8 +277,34 @@ int main(int argc, char *argv[])
             fprintf(stderr, "ERROR: inode referred to in directory but marked free.\n");
             exit(1);
         }
+
+        // ******************************* CHECK 11 *******************************
+        // Reference counts (number of links) for regular files match the number of 
+        // times file is referred to in directories (i.e., hard links work correctly).
+        if(file_nlinks[i] != 0)
+        {
+            if (file_nlinks[i] != file_refs[i])
+            {
+                fprintf(stderr, "ERROR: bad reference count for file.\n");
+                exit(1);
+            }
+        }
+
+        // ******************************* CHECK 12 *******************************
+        // No extra links allowed for directories (each directory only appears in one other directory).
+        if(dir_nlinks[i] != 0)
+        {
+            if (file_refs[i] != 1)
+            {
+                fprintf(stderr, "ERROR: directory appears more than once in file system.\n");
+                exit(1);
+            }
+        }
     }
 
+    // ******************************* CHECK 6 *******************************
+    // For blocks marked in-use in bitmap, the block should actually be in-use in an inode or indirect
+    // block somewhere.
     for (int i = data_block_addr; i < sb->nblocks; i++)
     {
         bit_l = bitmap[i / 8];
