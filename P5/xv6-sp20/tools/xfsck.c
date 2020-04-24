@@ -74,9 +74,15 @@ int main(int argc, char *argv[])
     int two_dot_found = 0;
 
     int list_addrs_used[sb->nblocks];
+    // int list_addrs_used_i[sb->ninodes];
+
     for (int i = 0; i < sb->nblocks; i++)
     {
         list_addrs_used[i] = 0;
+        // if(i < sb->ninodes)
+        // {
+        //     list_addrs_used_i[i] = 0;
+        // }
     }
 
     while (j < sb->ninodes)
@@ -88,6 +94,8 @@ int main(int argc, char *argv[])
             j++;
             continue;
         }
+        // list_addrs_used_i[j] = 1;
+
         // ******************************* CHECK 2 *******************************
         // Each inode is either unallocated or one of the valid types (T_FILE, T_DIR, T_DEV)
         if (type != 0 && type != T_DEV && type != T_DIR && type != T_FILE)
@@ -95,6 +103,8 @@ int main(int argc, char *argv[])
             fprintf(stderr, "ERROR: bad inode.\n");
             exit(1);
         }
+
+        uint num_blocks = 0;
 
         // ******************************* CHECK 3 *******************************
         // printf("MAX = %d, MIN = %d, j = %d\n", size_fs, data_block_addr, j);
@@ -119,11 +129,16 @@ int main(int argc, char *argv[])
                 exit(1);
             }
 
-
-            if (dip[j].addrs[k] != 0) 
+            if (dip[j].addrs[k] != 0)
             {
+                num_blocks++;
+                if (list_addrs_used[dip[j].addrs[k]] == 1)
+                {
+                    fprintf(stderr, "ERROR: direct address used more than once.\n");
+                    exit(1);
+                }
                 list_addrs_used[dip[j].addrs[k]] = 1;
-                // printf("direct:     adding to list %d\n", dip[j].addrs[k]);
+                //printf("direct:     adding to list %d\n", dip[j].addrs[k]);
             }
         }
 
@@ -133,6 +148,7 @@ int main(int argc, char *argv[])
         if (dip[j].addrs[NDIRECT] != 0)
         {
             list_addrs_used[dip[j].addrs[NDIRECT]] = 1;
+            // printf("direct:     adding to list %d\n", dip[j].addrs[NDIRECT]);
             for (int i = 0; i < BSIZE / sizeof(uint); ++i)
             {
                 if (indirect[i] != 0 && (indirect[i] >= size_fs || indirect[i] < data_block_addr))
@@ -140,7 +156,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "ERROR: bad indirect address in inode.\n");
                     exit(1);
                 }
-                
+
                 // ******************************* CHECK 5 *******************************
                 // For in-use inodes, each INDIRECT address in use is also marked in use in the bitmap
                 char bit_l = bitmap[indirect[i] / 8];
@@ -154,12 +170,30 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                if (indirect[i] != 0) 
+                if (indirect[i] != 0)
                 {
+                    num_blocks++;
                     list_addrs_used[indirect[i]] = 1;
-                    // printf("indirect:   adding to list %d\n", indirect[i]);
+                    //printf("indirect:   adding to list %d\n", indirect[i]);
                 }
             }
+        }
+
+        if (dip[j].type == T_FILE)
+        {
+            // printf("size of file = %d, j = %d, num_blocks = %d\n", dip[j].size, j, num_blocks);
+            
+            // There are 19 blocks of data, so we're using at MOST (19 * <block_size>) bytes of data, e.g. (19 * 512) = 9728,
+            uint max = num_blocks * 512;
+            uint min = (num_blocks - 1) * 512 + 1;
+            // printf("max = %d, min = %d\n", max, min);
+            if(dip[j].size != 0 && (dip[j].size > max || dip[j].size < min))
+            {
+                fprintf(stderr, "ERROR: incorrect file size in inode.\n");
+                exit(1);
+            }
+            // and at LEAST ( [<num_blocks> - 1] * <block_size>+ 1) bytes of data, e.g. (18 * 512 + 1) = 9217.
+
         }
 
         if (dip[j].type == T_DIR)
@@ -216,6 +250,7 @@ int main(int argc, char *argv[])
     int mask;
     char bit_masked;
     int bit_final;
+
     for (int i = data_block_addr; i < sb->nblocks; i++)
     {
         bit_l = bitmap[i / 8];
@@ -223,6 +258,7 @@ int main(int argc, char *argv[])
         bit_masked = bit_l & mask;
         bit_final = bit_masked >> (i % 8);
         bit_final = bit_final & 1;
+        // printf("i = %d, bit_final = %d, list val = %d\n", i, bit_final, list_addrs_used[i]);
 
         if (bit_final == 1 && list_addrs_used[i] == 0)
         {
