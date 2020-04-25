@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
                 {
                     num_blocks++;
                     list_addrs_used[indirect[i]] = 1;
+                    // printf("***************** addr %d \n", indirect[i]);
                 }
             }
         }
@@ -203,36 +204,64 @@ int main(int argc, char *argv[])
 
         if (dip[j].type == T_DIR)
         {
-            dir_nlinks[j] = dip[j].nlink; // Directory # links always 1 ??
+            dir_nlinks[j] = dip[j].nlink; // Directory # links always 1
             dot_found = 0;
             two_dot_found = 0;
             curr_block_addr = dip[j].addrs[0];
-            struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
-            int num_entries = (dip[j].size / (DIRSIZ + 2));
+            int entries_per_block = BSIZE / sizeof(struct xv6_dirent); 
 
-            for (int i = 0; i < num_entries; ++i)
+            for(int k = 0; k < NDIRECT; k++)
             {
-                if (strcmp(entry[i].name, ".") == 0)
+                curr_block_addr = dip[j].addrs[k];
+                struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
+                for (int i = 0; i < entries_per_block; ++i)
                 {
-                    // . directory
-                    // Make sure it points to self
-                    dot_found = 1;
-                    if (entry[i].inum != j)
+                    if (strcmp(entry[i].name, ".") == 0)
                     {
-                        fprintf(stderr, "ERROR: directory not properly formatted.\n");
-                        exit(1);
+                        // . directory
+                        // Make sure it points to self
+                        dot_found = 1;
+                        if (entry[i].inum != j)
+                        {
+                            fprintf(stderr, "ERROR: directory not properly formatted.\n");
+                            exit(1);
+                        }
+                    }
+                    else if (strcmp(entry[i].name, "..") == 0)
+                    {
+                        // .. directory
+                        two_dot_found = 1;
+                    }
+                    else
+                    {
+                        // Add directory entry inum to inode reference list
+                        list_addrs_used_i[entry[i].inum] = 1;
+                        file_refs[entry[i].inum]++;
+                        // if(entry[i].inum !=0)
+                        //     printf("new ref count = %d, name: %s, inum %d\n", file_refs[entry[i].inum], entry[i].name, entry[i].inum);
                     }
                 }
-                else if (strcmp(entry[i].name, "..") == 0)
+            }
+
+            curr_block_addr = dip[j].addrs[NDIRECT];
+            int curr_indir_block = 0;
+            if(curr_block_addr != 0)
+            {
+                // printf("curr_block_addr = %d\n", curr_block_addr);
+                // uint *indirect_addrs = (uint *)(img_ptr + curr_block_addr * BSIZE); // each uint is a block
+                for (int k = 0; k < BSIZE / sizeof(uint); k++)
                 {
-                    // .. directory
-                    two_dot_found = 1;
-                }
-                else
-                {
-                    // Add directory entry inum to inode reference list
-                    list_addrs_used_i[entry[i].inum] = 1;
-                    file_refs[entry[i].inum]++;
+                    curr_indir_block = indirect[k];
+                    // printf("curr_indir_block = %d\n", curr_indir_block);
+                    struct xv6_dirent *indirect_entry = (struct xv6_dirent *)(img_ptr + curr_indir_block * BSIZE); // each uint is a block
+                    for (int i = 0; i < entries_per_block; i++)
+                    {
+                        // Add directory entry inum to inode reference list
+                        list_addrs_used_i[indirect_entry[i].inum] = 1;
+                        file_refs[indirect_entry[i].inum]++;
+                        // if(indirect_entry[i].inum !=0)
+                            // printf("new ref count = %d, name: %s, inum %d\n", file_refs[indirect_entry[i].inum], indirect_entry[i].name, indirect_entry[i].inum);
+                    }
                 }
             }
 
