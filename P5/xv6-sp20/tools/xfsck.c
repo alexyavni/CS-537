@@ -18,7 +18,8 @@
 #undef stat
 #undef dirent
 
-void print_inode(struct dinode dip);
+int verify_parent_dir(void *img_ptr, int entries_per_block, struct dinode *dip, uint child_inum, uint parent_inum);
+int verify_no_loops(void *img_ptr, int entries_per_block, int ninodes, struct dinode *dip, uint orig_dir_inum);
 
 int main(int argc, char *argv[])
 {
@@ -183,7 +184,6 @@ int main(int argc, char *argv[])
                 {
                     num_blocks++;
                     list_addrs_used[indirect[i]] = 1;
-                    // printf("***************** addr %d \n", indirect[i]);
                 }
             }
         }
@@ -208,9 +208,9 @@ int main(int argc, char *argv[])
             dot_found = 0;
             two_dot_found = 0;
             curr_block_addr = dip[j].addrs[0];
-            int entries_per_block = BSIZE / sizeof(struct xv6_dirent); 
+            int entries_per_block = BSIZE / sizeof(struct xv6_dirent);
 
-            for(int k = 0; k < NDIRECT; k++)
+            for (int k = 0; k < NDIRECT; k++)
             {
                 curr_block_addr = dip[j].addrs[k];
                 struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
@@ -231,36 +231,43 @@ int main(int argc, char *argv[])
                     {
                         // .. directory
                         two_dot_found = 1;
+
+                        // Verify parent-child - ec
+                        int verify_pc = verify_parent_dir(img_ptr, entries_per_block, dip, j, entry[i].inum);
+                        if (verify_pc != 0)
+                        {
+                            fprintf(stderr, "ERROR: parent directory mismatch.\n");
+                            exit(1);
+                        }
+
+                        int verify_noLoops = verify_no_loops(img_ptr, entries_per_block, sb->ninodes, dip, j);
+                        if (verify_noLoops != 0)
+                        {
+                            fprintf(stderr, "ERROR: inaccessible directory exists.\n");
+                            exit(1);
+                        }
                     }
                     else
                     {
                         // Add directory entry inum to inode reference list
                         list_addrs_used_i[entry[i].inum] = 1;
                         file_refs[entry[i].inum]++;
-                        // if(entry[i].inum !=0)
-                        //     printf("new ref count = %d, name: %s, inum %d\n", file_refs[entry[i].inum], entry[i].name, entry[i].inum);
                     }
                 }
             }
 
             curr_block_addr = dip[j].addrs[NDIRECT];
             int curr_indir_block = 0;
-            if(curr_block_addr != 0)
+            if (curr_block_addr != 0)
             {
-                // printf("curr_block_addr = %d\n", curr_block_addr);
-                // uint *indirect_addrs = (uint *)(img_ptr + curr_block_addr * BSIZE); // each uint is a block
                 for (int k = 0; k < BSIZE / sizeof(uint); k++)
                 {
                     curr_indir_block = indirect[k];
-                    // printf("curr_indir_block = %d\n", curr_indir_block);
                     struct xv6_dirent *indirect_entry = (struct xv6_dirent *)(img_ptr + curr_indir_block * BSIZE); // each uint is a block
                     for (int i = 0; i < entries_per_block; i++)
                     {
-                        // Add directory entry inum to inode reference list
                         list_addrs_used_i[indirect_entry[i].inum] = 1;
                         file_refs[indirect_entry[i].inum]++;
-                        // if(indirect_entry[i].inum !=0)
-                            // printf("new ref count = %d, name: %s, inum %d\n", file_refs[indirect_entry[i].inum], indirect_entry[i].name, indirect_entry[i].inum);
                     }
                 }
             }
@@ -276,15 +283,6 @@ int main(int argc, char *argv[])
 
         j++;
     }
-
-    // How to parse root directory contents?
-    // dip[1] is the root inode and addrs[0] is the first block within that
-    // struct xv6_dirent *dent = (struct xv6_dirent*) (img_ptr + dip[1].addrs[0] * BSIZE);
-
-    // printf("Number of inodes in one block %ld\n", IPB);
-    // unused       | superblock | inode blocks [25] | unused    | bitmap (data)    | data blocks [995]
-    // 0            | 1          | 2 ... 26          | 27        | 28               | 29 -> data blocks
-    // 1 + 1 + 25 + 2 + 995 = 1024 total blocks
 
     char bit_l;
     int mask;
@@ -308,9 +306,9 @@ int main(int argc, char *argv[])
         }
 
         // ******************************* CHECK 11 *******************************
-        // Reference counts (number of links) for regular files match the number of 
+        // Reference counts (number of links) for regular files match the number of
         // times file is referred to in directories (i.e., hard links work correctly).
-        if(file_nlinks[i] != 0)
+        if (file_nlinks[i] != 0)
         {
             if (file_nlinks[i] != file_refs[i])
             {
@@ -321,7 +319,7 @@ int main(int argc, char *argv[])
 
         // ******************************* CHECK 12 *******************************
         // No extra links allowed for directories (each directory only appears in one other directory).
-        if(dir_nlinks[i] != 0)
+        if (dir_nlinks[i] != 0)
         {
             if (file_refs[i] != 1)
             {
@@ -352,10 +350,94 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void print_inode(struct dinode dip)
+// EXTRA CREDIT 1
+// Each .. entry in a directory refers to the proper parent inode and parent inode points back to it.
+int verify_parent_dir(void *img_ptr, int entries_per_block, struct dinode *dip, uint child_inum, uint parent_inum)
 {
-    printf("file type:%d,", dip.type);
-    printf("nlink:%d,", dip.nlink);
-    printf("size:%d,", dip.size);
-    printf("first_addr:%d\n", dip.addrs[0]);
+    if (child_inum == parent_inum)
+        return 0;
+    uint found_child = -1;
+    int curr_block_addr;
+    struct xv6_dirent *entry;
+    for (int k = 0; k < NDIRECT; k++)
+    {
+        curr_block_addr = dip[parent_inum].addrs[k];
+        entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
+        for (int i = 0; i < entries_per_block; i++)
+        {
+            if (entry[i].inum == child_inum)
+            {
+                return 0;
+            }
+        }
+    }
+
+    // Indirect addresses block ptr
+    uint *indirect = (uint *)(img_ptr + BSIZE * dip[parent_inum].addrs[NDIRECT]);
+
+    uint curr_indir_block;
+    if (dip[parent_inum].addrs[NDIRECT] != 0)
+    {
+        for (int k = 0; k < BSIZE / sizeof(uint); ++k)
+        {
+            curr_indir_block = indirect[k];
+            struct xv6_dirent *indirect_entry = (struct xv6_dirent *)(img_ptr + curr_indir_block * BSIZE); // each uint is a block
+            for (int i = 0; i < entries_per_block; i++)
+            {
+                if (indirect_entry[i].inum == child_inum)
+                    found_child = 0;
+            }
+        }
+    }
+
+    return found_child;
+}
+
+// EXTRA CREDIT 2:
+// Every directory traces back to the root directory . (i.e no loops in the directory tree). 
+int verify_no_loops(void *img_ptr, int entries_per_block, int ninodes, struct dinode *dip, uint orig_dir_inum)
+{
+    int dir_inums[ninodes];
+    for (int i = 0; i < ninodes; i++)
+    {
+        dir_inums[i] = -1;
+    }
+
+    int list_cnt = 0;
+    int curr_block_addr = dip[orig_dir_inum].addrs[0];
+    struct xv6_dirent *entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
+    int new_inum = orig_dir_inum;
+
+    while (1)
+    {
+        if (new_inum == 1)
+        {
+            return 0;
+        }
+
+        dir_inums[list_cnt++] = orig_dir_inum;
+
+        for (int k = 0; k < entries_per_block; k++)
+        {
+            if (strcmp(entry[k].name, "..") == 0)
+            {
+                new_inum = entry[k].inum;
+                break;
+            }
+        }
+
+        for (int i = 0; i < ninodes; i++)
+        {
+            if (dir_inums[i] == new_inum && dir_inums[i] != 1)
+                return -1;
+            if (dir_inums[i] == -1)
+                break;
+        }
+
+        dir_inums[list_cnt++] = new_inum;
+        curr_block_addr = dip[new_inum].addrs[0];
+        entry = (struct xv6_dirent *)(img_ptr + curr_block_addr * BSIZE);
+    }
+
+    return -1;
 }
